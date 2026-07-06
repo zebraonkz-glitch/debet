@@ -41,23 +41,26 @@ export default function ReportFormScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const loadReport = useCallback(async () => {
-    const projectIds = parseReportProjectIds(params.projectIds);
-    if (projectIds.length === 0) {
-      setReport(null);
-      setErrorMessage('Не выбраны проекты для отчёта');
-      setLoading(false);
-      return;
-    }
+    const selectedIds = parseReportProjectIds(params.projectIds);
+    const fromDate = parseReportDateParam(params.fromDate);
+    const toDate = parseReportDateParam(params.toDate);
 
     setLoading(true);
     setErrorMessage(null);
 
     try {
       const result = await buildReport({
-        projectIds,
-        fromDate: parseReportDateParam(params.fromDate),
-        toDate: parseReportDateParam(params.toDate),
+        projectIds: selectedIds,
+        fromDate,
+        toDate,
       });
+
+      if (result.sections.length === 0) {
+        setReport(null);
+        setErrorMessage('Нет проектов для отчёта за выбранный период');
+        return;
+      }
+
       setReport(result);
     } catch (error) {
       console.error(error);
@@ -87,7 +90,9 @@ export default function ReportFormScreen() {
       ) : report ? (
         <View>
           <Text variant="bodyMedium" style={styles.period}>
-            Период расходов: {formatPeriodLabel(report.fromDate, report.toDate)}
+            {hasPeriodFilter
+              ? `Период проектов: ${formatPeriodLabel(report.fromDate, report.toDate)}`
+              : 'Все проекты по дате'}
           </Text>
 
           <Card style={styles.totalsCard}>
@@ -100,8 +105,7 @@ export default function ReportFormScreen() {
                 Сумма проектов: {formatMoney(report.totals.projectAmount)}
               </Text>
               <Text variant="bodyMedium">
-                {hasPeriodFilter ? 'Расходы за период' : 'Расходы'}:{' '}
-                {formatMoney(report.totals.expensesTotal)}
+                Расходы: {formatMoney(report.totals.expensesTotal)}
               </Text>
               <Text
                 variant="titleMedium"
@@ -124,12 +128,6 @@ export default function ReportFormScreen() {
               <Text variant="bodyMedium">
                 Остаток: {formatMoney(report.totals.remaining)}
               </Text>
-              {hasPeriodFilter ? (
-                <Text variant="bodyMedium">
-                  Расходы за период (детализация):{' '}
-                  {formatMoney(report.totals.periodExpenses)}
-                </Text>
-              ) : null}
               {report.overBudgetProjectNames.length > 0 ? (
                 <Text variant="bodyMedium" style={styles.warning}>
                   Превышение бюджета: {report.overBudgetProjectNames.join(', ')}
@@ -143,11 +141,7 @@ export default function ReportFormScreen() {
           </Card>
 
           {report.sections.map((section) => (
-            <ReportProjectSection
-              key={section.project.id}
-              section={section}
-              hasPeriodFilter={hasPeriodFilter}
-            />
+            <ReportProjectSection key={section.project.id} section={section} />
           ))}
         </View>
       ) : null}

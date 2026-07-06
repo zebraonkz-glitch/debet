@@ -2,24 +2,20 @@ import { StyleSheet, View } from 'react-native';
 import { Card, Chip, Text } from 'react-native-paper';
 
 import type { ReportProjectSection as ReportSection } from '../../utils/reports';
-import { formatDate, formatMoney } from '../../utils/format';
+import { formatDate, formatDateOnly, formatMoney } from '../../utils/format';
 
 type ReportProjectSectionProps = {
   section: ReportSection;
-  hasPeriodFilter: boolean;
 };
 
-export function ReportProjectSection({
-  section,
-  hasPeriodFilter,
-}: ReportProjectSectionProps) {
-  const { project, budgetSummary, expenseGroups, periodTotal, projectAmount, expensesTotal, profit } =
+export function ReportProjectSection({ section }: ReportProjectSectionProps) {
+  const { project, budgetSummary, expenseGroups, projectAmount, expensesTotal, profit } =
     section;
 
   return (
     <View style={styles.container}>
       <Text variant="titleLarge" style={styles.projectName}>
-        {project.name}
+        {formatDateOnly(project.date)} · {project.name}
       </Text>
 
       <View style={styles.chips}>
@@ -53,8 +49,7 @@ export function ReportProjectSection({
             Сумма проекта: {formatMoney(projectAmount)}
           </Text>
           <Text variant="bodyMedium">
-            {hasPeriodFilter ? 'Расходы за период' : 'Расходы'}:{' '}
-            {formatMoney(expensesTotal)}
+            Расходы: {formatMoney(expensesTotal)}
           </Text>
           <Text
             variant="titleMedium"
@@ -124,15 +119,11 @@ export function ReportProjectSection({
 
       <View style={styles.expenses}>
         <Text variant="titleSmall" style={styles.blockTitle}>
-          {hasPeriodFilter
-            ? `Расходы за период: ${formatMoney(periodTotal)}`
-            : `Расходы: ${formatMoney(periodTotal)}`}
+          Расходы: {formatMoney(expensesTotal)}
         </Text>
           {expenseGroups.length === 0 ? (
             <Text variant="bodyMedium" style={styles.empty}>
-              {hasPeriodFilter
-                ? 'Расходов за выбранный период нет'
-                : 'Расходов пока нет'}
+              Расходов пока нет
             </Text>
           ) : (
             expenseGroups.map((group) => (

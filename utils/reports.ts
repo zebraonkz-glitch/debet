@@ -1,6 +1,6 @@
 import { getBudgetItemsByProjectId } from '../repositories/budgetItemRepository';
-import { getExpensesByProjectAndPeriod } from '../repositories/expenseRepository';
-import { getProjectById } from '../repositories/projectRepository';
+import { getExpensesByProjectId } from '../repositories/expenseRepository';
+import { getAllProjects, getProjectById } from '../repositories/projectRepository';
 import type { Expense, Project, ProjectBudgetSummary } from '../types/entities';
 import { getProjectBudgetSummary } from './budget';
 import { groupExpensesByBudgetItem, type ExpenseGroup } from './expenses';
@@ -8,8 +8,7 @@ import { groupExpensesByBudgetItem, type ExpenseGroup } from './expenses';
 export type ReportProjectSection = {
   project: Project;
   budgetSummary: ProjectBudgetSummary;
-  periodExpenses: Expense[];
-  periodTotal: number;
+  expenses: Expense[];
   expenseGroups: ExpenseGroup[];
   projectAmount: number;
   expensesTotal: number;
@@ -20,7 +19,6 @@ export type ReportTotals = {
   planned: number;
   actual: number;
   remaining: number;
-  periodExpenses: number;
   projectAmount: number;
   expensesTotal: number;
   profit: number;
@@ -56,42 +54,101 @@ function endOfDayIso(date: Date): string {
   return copy.toISOString();
 }
 
+export function compareProjectsByDate(left: Project, right: Project): number {
+  const leftTime = new Date(left.date).getTime();
+  const rightTime = new Date(right.date).getTime();
+
+  if (leftTime !== rightTime) {
+    return leftTime - rightTime;
+  }
+
+  return left.id - right.id;
+}
+
+export function sortProjectsByDate(projects: Project[]): Project[] {
+  return [...projects].sort(compareProjectsByDate);
+}
+
+export function isProjectDateInPeriod(
+  project: Project,
+  fromDate?: Date | null,
+  toDate?: Date | null,
+): boolean {
+  const projectTime = new Date(project.date).getTime();
+
+  if (fromDate) {
+    const fromTime = new Date(startOfDayIso(fromDate)).getTime();
+    if (projectTime < fromTime) {
+      return false;
+    }
+  }
+
+  if (toDate) {
+    const toTime = new Date(endOfDayIso(toDate)).getTime();
+    if (projectTime > toTime) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+export async function resolveReportProjectIds(options: {
+  selectedIds: number[];
+  fromDate?: Date | null;
+  toDate?: Date | null;
+}): Promise<number[]> {
+  if (options.selectedIds.length > 0) {
+    const projects: Project[] = [];
+
+    for (const projectId of options.selectedIds) {
+      const project = await getProjectById(projectId);
+      if (project) {
+        projects.push(project);
+      }
+    }
+
+    return sortProjectsByDate(projects).map((project) => project.id);
+  }
+
+  const allProjects = await getAllProjects();
+  const projectsInPeriod = allProjects.filter((project) =>
+    isProjectDateInPeriod(project, options.fromDate, options.toDate),
+  );
+
+  return sortProjectsByDate(projectsInPeriod).map((project) => project.id);
+}
+
 export async function buildReport(
   options: BuildReportOptions,
 ): Promise<ReportResult> {
   const fromIso = options.fromDate ? startOfDayIso(options.fromDate) : undefined;
   const toIso = options.toDate ? endOfDayIso(options.toDate) : undefined;
+  const projectIds = await resolveReportProjectIds({
+    selectedIds: options.projectIds,
+    fromDate: options.fromDate,
+    toDate: options.toDate,
+  });
   const sections: ReportProjectSection[] = [];
 
-  for (const projectId of options.projectIds) {
+  for (const projectId of projectIds) {
     const project = await getProjectById(projectId);
     if (!project) {
       continue;
     }
 
     const budgetSummary = await getProjectBudgetSummary(projectId);
-    const periodExpenses = await getExpensesByProjectAndPeriod(
-      projectId,
-      fromIso,
-      toIso,
-    );
+    const expenses = await getExpensesByProjectId(projectId);
     const budgetItems = await getBudgetItemsByProjectId(projectId);
-    const expenseGroups = groupExpensesByBudgetItem(periodExpenses, budgetItems);
-    const periodTotal = periodExpenses.reduce(
-      (sum, expense) => sum + expense.amount,
-      0,
-    );
-    const expensesTotal = roundAmount(
-      fromIso || toIso ? periodTotal : budgetSummary.actualTotal,
-    );
+    const expenseGroups = groupExpensesByBudgetItem(expenses, budgetItems);
+    const expensesTotal = roundAmount(budgetSummary.actualTotal);
     const projectAmount = roundAmount(project.amount);
     const profit = roundAmount(projectAmount - expensesTotal);
 
     sections.push({
       project,
       budgetSummary,
-      periodExpenses,
-      periodTotal: roundAmount(periodTotal),
+      expenses,
       expenseGroups,
       projectAmount,
       expensesTotal,
@@ -99,12 +156,13 @@ export async function buildReport(
     });
   }
 
+  sections.sort((left, right) => compareProjectsByDate(left.project, right.project));
+
   const totals = sections.reduce<ReportTotals>(
     (accumulator, section) => ({
       planned: accumulator.planned + section.budgetSummary.plannedTotal,
       actual: accumulator.actual + section.budgetSummary.actualTotal,
       remaining: accumulator.remaining + section.budgetSummary.remainingTotal,
-      periodExpenses: accumulator.periodExpenses + section.periodTotal,
       projectAmount: accumulator.projectAmount + section.projectAmount,
       expensesTotal: accumulator.expensesTotal + section.expensesTotal,
       profit: accumulator.profit + section.profit,
@@ -113,7 +171,6 @@ export async function buildReport(
       planned: 0,
       actual: 0,
       remaining: 0,
-      periodExpenses: 0,
       projectAmount: 0,
       expensesTotal: 0,
       profit: 0,
@@ -123,7 +180,6 @@ export async function buildReport(
   totals.planned = roundAmount(totals.planned);
   totals.actual = roundAmount(totals.actual);
   totals.remaining = roundAmount(totals.remaining);
-  totals.periodExpenses = roundAmount(totals.periodExpenses);
   totals.projectAmount = roundAmount(totals.projectAmount);
   totals.expensesTotal = roundAmount(totals.expensesTotal);
   totals.profit = roundAmount(totals.profit);

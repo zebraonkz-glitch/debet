@@ -14,6 +14,11 @@ import { DateField } from '../../components/common/DateField';
 import { ScreenLayout } from '../../components/ScreenLayout';
 import { getAllProjects } from '../../repositories/projectRepository';
 import type { Project } from '../../types/entities';
+import {
+  isProjectDateInPeriod,
+  sortProjectsByDate,
+} from '../../utils/reports';
+import { formatDateOnly } from '../../utils/format';
 
 type ProjectFilter = 'all' | 'finished' | 'liked';
 
@@ -44,10 +49,13 @@ export default function ReportsScreen() {
   const [toDate, setToDate] = useState<Date | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const visibleProjects = useMemo(
-    () => filterProjects(projects, filter),
-    [projects, filter],
-  );
+  const visibleProjects = useMemo(() => {
+    const filtered = filterProjects(projects, filter).filter((project) =>
+      isProjectDateInPeriod(project, fromDate, toDate),
+    );
+
+    return sortProjectsByDate(filtered);
+  }, [projects, filter, fromDate, toDate]);
 
   const loadProjects = useCallback(async () => {
     setLoading(true);
@@ -86,13 +94,13 @@ export default function ReportsScreen() {
   };
 
   const handleGenerate = () => {
-    if (selectedIds.size === 0) {
-      setErrorMessage('Выберите хотя бы один проект');
+    if (fromDate && toDate && fromDate > toDate) {
+      setErrorMessage('Дата начала не может быть позже даты окончания');
       return;
     }
 
-    if (fromDate && toDate && fromDate > toDate) {
-      setErrorMessage('Дата начала не может быть позже даты окончания');
+    if (selectedIds.size === 0 && visibleProjects.length === 0) {
+      setErrorMessage('Нет проектов за выбранный период');
       return;
     }
 
@@ -109,7 +117,8 @@ export default function ReportsScreen() {
   return (
     <ScreenLayout title="Отчёты">
       <Text variant="bodyLarge" style={styles.intro}>
-        Выберите проекты и период для анализа расходов.
+        Выберите проекты и период. Если проекты не отмечены, в отчёт попадут все
+        проекты за период по дате проекта.
       </Text>
 
       <Text variant="titleMedium" style={styles.sectionTitle}>
@@ -148,7 +157,7 @@ export default function ReportsScreen() {
           {visibleProjects.map((project) => (
             <Checkbox.Item
               key={project.id}
-              label={project.name}
+              label={`${formatDateOnly(project.date)} · ${project.name}`}
               status={selectedIds.has(project.id) ? 'checked' : 'unchecked'}
               onPress={() => toggleProject(project.id)}
               style={styles.checkbox}
@@ -158,10 +167,10 @@ export default function ReportsScreen() {
       )}
 
       <Text variant="titleMedium" style={styles.sectionTitle}>
-        Период расходов
+        Период
       </Text>
       <Text variant="bodySmall" style={styles.hint}>
-        Оставьте пустым, чтобы включить все расходы
+        Период отбирает проекты по дате. Расходы учитываются полностью.
       </Text>
 
       <DateField
@@ -200,7 +209,7 @@ export default function ReportsScreen() {
         mode="contained"
         onPress={handleGenerate}
         style={styles.generateButton}
-        disabled={loading || projects.length === 0}
+        disabled={loading || (projects.length === 0 && selectedIds.size === 0)}
       >
         Сформировать отчёт
       </Button>
