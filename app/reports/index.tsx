@@ -17,7 +17,7 @@ import type { Project } from '../../types/entities';
 import {
   isProjectDateInPeriod,
   sortProjectsByDate,
-} from '../../utils/reports';
+} from '../../utils/projects';
 import { formatDateOnly } from '../../utils/format';
 
 type ProjectFilter = 'all' | 'finished' | 'liked';

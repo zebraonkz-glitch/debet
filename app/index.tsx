@@ -21,8 +21,8 @@ const MENU_ITEMS: MenuItem[] = [
     href: '/expense/create',
   },
   {
-    title: 'Проекты',
-    subtitle: 'Список проектов',
+    title: 'Журнал',
+    subtitle: 'Список проектов по дате',
     href: '/projects',
   },
   {
