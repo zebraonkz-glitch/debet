@@ -11,6 +11,7 @@ import {
 import { ScreenLayout } from '../../components/ScreenLayout';
 import { BudgetItemDialog } from '../../components/project/BudgetItemDialog';
 import { BudgetSection } from '../../components/project/BudgetSection';
+import { ProjectExpensesList } from '../../components/expense/ProjectExpensesList';
 import { ExecutorDialog } from '../../components/project/ExecutorDialog';
 import { ExecutorsList } from '../../components/project/ExecutorsList';
 import {
@@ -22,10 +23,12 @@ import { SavedPhotoGallery } from '../../components/project/SavedPhotoGallery';
 import {
   createBudgetItem,
   deleteBudgetItem,
+  getBudgetItemsByProjectId,
   reorderBudgetItem,
   updateBudgetItem,
 } from '../../repositories/budgetItemRepository';
 import { createExecutor } from '../../repositories/executorRepository';
+import { getExpensesByProjectId } from '../../repositories/expenseRepository';
 import { createPhoto, deletePhoto, getPhotosByProjectId } from '../../repositories/photoRepository';
 import {
   deleteProject,
@@ -45,6 +48,7 @@ import type {
   ProjectBudgetSummary,
 } from '../../types/entities';
 import { getProjectBudgetSummary } from '../../utils/budget';
+import { groupExpensesByBudgetItem, type ExpenseGroup } from '../../utils/expenses';
 import { formatDate } from '../../utils/format';
 import { getCurrentCoordinates } from '../../utils/location';
 import { savePhotoFromUri } from '../../utils/photos';
@@ -63,6 +67,7 @@ export default function ProjectDetailScreen() {
   const [budgetSummary, setBudgetSummary] = useState<ProjectBudgetSummary | null>(
     null,
   );
+  const [expenseGroups, setExpenseGroups] = useState<ExpenseGroup[]>([]);
   const [executors, setExecutors] = useState<Executor[]>([]);
   const [executorDialogVisible, setExecutorDialogVisible] = useState(false);
   const [budgetDialogVisible, setBudgetDialogVisible] = useState(false);
@@ -90,18 +95,21 @@ export default function ProjectDetailScreen() {
 
     setLoading(true);
     try {
-      const [loadedProject, loadedPhotos, summary, loadedExecutors] =
+      const [loadedProject, loadedPhotos, summary, loadedExecutors, expenses, budgetItems] =
         await Promise.all([
           getProjectById(projectId),
           getPhotosByProjectId(projectId),
           getProjectBudgetSummary(projectId),
           getExecutorsByProjectId(projectId),
+          getExpensesByProjectId(projectId),
+          getBudgetItemsByProjectId(projectId),
         ]);
 
       setProject(loadedProject);
       setPhotos(loadedPhotos);
       setBudgetSummary(summary);
       setExecutors(loadedExecutors);
+      setExpenseGroups(groupExpensesByBudgetItem(expenses, budgetItems));
       setPendingPhotos([]);
 
       if (loadedProject) {
@@ -381,6 +389,11 @@ export default function ProjectDetailScreen() {
           onMoveDown={(item) => handleMoveBudgetItem(item, 'down')}
         />
       ) : null}
+
+      <ProjectExpensesList
+        groups={expenseGroups}
+        onAdd={() => router.push(`/expense/create?projectId=${project.id}`)}
+      />
 
       <ExecutorsList
         executors={executors}

@@ -33,7 +33,9 @@ export type CreateExpenseInput = {
 
 export type UpdateExpenseInput = Partial<
   Omit<CreateExpenseInput, 'projectId'>
->;
+> & {
+  createdAt?: string;
+};
 
 export type CreateExecutorInput = {
   name: string;

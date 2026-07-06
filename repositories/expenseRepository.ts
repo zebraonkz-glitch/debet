@@ -98,11 +98,12 @@ export async function updateExpense(
 
   await db.runAsync(
     `UPDATE expenses
-     SET budget_item_id = ?, amount = ?, description = ?
+     SET budget_item_id = ?, amount = ?, description = ?, created_at = ?
      WHERE id = ?`,
     input.budgetItemId ?? current.budgetItemId,
     input.amount ?? current.amount,
     input.description ?? current.description,
+    input.createdAt ?? current.createdAt,
     id,
   );
 

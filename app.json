@@ -42,7 +42,8 @@
           "photosPermission": "Приложению нужен доступ к фото для прикрепления к проекту.",
           "cameraPermission": "Приложению нужен доступ к камере для съёмки фото проекта."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ]
   }
 }
