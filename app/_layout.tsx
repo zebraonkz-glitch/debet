@@ -1,7 +1,10 @@
 import 'react-native-gesture-handler';
 
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
 import { useEffect } from 'react';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider, Portal } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -10,16 +13,31 @@ import { theme } from '../theme';
 
 export default function RootLayout() {
   useEffect(() => {
-    void getDatabase();
+    getDatabase().catch((error) => {
+      console.error('Ошибка инициализации базы данных:', error);
+    });
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <PaperProvider theme={theme}>
-        <Portal.Host>
-          <Stack screenOptions={{ headerShown: false }} />
-        </Portal.Host>
-      </PaperProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>
+        <PaperProvider
+          theme={theme}
+          settings={{
+            icon: (props) => <MaterialCommunityIcons {...props} />,
+          }}
+        >
+          <Portal.Host>
+            <Stack screenOptions={{ headerShown: false }} />
+          </Portal.Host>
+        </PaperProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+});

@@ -1,8 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import MapView from 'react-native-maps/src/MapView';
-import Marker from 'react-native-maps/src/MapMarker';
-import { Button, Text } from 'react-native-paper';
+import { Button, Card, Text } from 'react-native-paper';
 
 import { ScreenLayout } from '../../components/ScreenLayout';
 import { formatCoordinates } from '../../utils/format';
@@ -30,53 +28,51 @@ export default function ProjectMapScreen() {
 
   return (
     <ScreenLayout title={projectName} scrollable={false}>
-      <Text variant="bodyMedium" style={styles.coords}>
-        {formatCoordinates(latitude, longitude)}
-      </Text>
+      <Card style={styles.card}>
+        <Card.Content>
+          <Text variant="titleMedium" style={styles.label}>
+            Координаты проекта
+          </Text>
+          <Text variant="bodyLarge" style={styles.coords}>
+            {formatCoordinates(latitude, longitude)}
+          </Text>
+          <Text variant="bodyMedium" style={styles.hint}>
+            Встроенная карта недоступна в Expo Go. Откройте точку во внешнем
+            приложении «Карты».
+          </Text>
+        </Card.Content>
+      </Card>
 
-      <View style={styles.mapContainer}>
-        <MapView
-          style={styles.map}
-          initialRegion={{
-            latitude,
-            longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
+      <View style={styles.actions}>
+        <Button
+          mode="contained"
+          icon="map"
+          onPress={() => openInMaps(latitude, longitude, projectName)}
         >
-          <Marker
-            coordinate={{ latitude, longitude }}
-            title={projectName}
-          />
-        </MapView>
+          Открыть в приложении «Карты»
+        </Button>
       </View>
-
-      <Button
-        mode="outlined"
-        icon="open-in-new"
-        onPress={() => openInMaps(latitude, longitude, projectName)}
-        style={styles.externalButton}
-      >
-        Открыть в приложении «Карты»
-      </Button>
     </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  coords: {
-    paddingBottom: 12,
-    color: '#1a5fb4',
+  card: {
+    backgroundColor: '#ffffff',
+    marginBottom: 16,
   },
-  mapContainer: {
-    flex: 1,
-    paddingBottom: 12,
-  },
-  map: {
-    flex: 1,
-    borderRadius: 12,
-  },
-  externalButton: {
+  label: {
+    color: '#1a1a2e',
     marginBottom: 8,
+  },
+  coords: {
+    color: '#1a5fb4',
+    marginBottom: 12,
+  },
+  hint: {
+    color: '#6b7280',
+  },
+  actions: {
+    gap: 12,
   },
 });
