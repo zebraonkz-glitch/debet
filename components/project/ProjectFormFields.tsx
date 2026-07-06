@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { Button, Switch, Text, TextInput } from 'react-native-paper';
 
 import { DateField } from '../common/DateField';
+import { useSettings } from '../../contexts/SettingsContext';
 import type { Coordinates } from '../../types/entities';
 import { formatCoordinates } from '../../utils/format';
 
@@ -28,6 +29,7 @@ export function ProjectFormFields({
   onRequestLocation,
   locationLoading = false,
 }: ProjectFormFieldsProps) {
+  const { settings } = useSettings();
   const update = (patch: Partial<ProjectFormValues>) => {
     onChange({ ...values, ...patch });
   };
@@ -60,7 +62,7 @@ export function ProjectFormFields({
       />
 
       <TextInput
-        label="Сумма, ₽"
+        label={`Сумма, ${settings.currencySymbol}`}
         value={values.amount}
         onChangeText={(amount) => update({ amount })}
         mode="outlined"

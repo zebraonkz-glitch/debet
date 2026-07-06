@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { Card, Chip, Text } from 'react-native-paper';
 
 import type { ReportProjectSection as ReportSection } from '../../utils/reports';
-import { formatAmount, formatDate } from '../../utils/format';
+import { formatDate, formatMoney } from '../../utils/format';
 
 type ReportProjectSectionProps = {
   section: ReportSection;
@@ -49,13 +49,13 @@ export function ReportProjectSection({
             Бюджет проекта
           </Text>
           <Text variant="bodyMedium">
-            План: {formatAmount(budgetSummary.plannedTotal)} ₽
+            План: {formatMoney(budgetSummary.plannedTotal)}
           </Text>
           <Text variant="bodyMedium">
-            Факт: {formatAmount(budgetSummary.actualTotal)} ₽
+            Факт: {formatMoney(budgetSummary.actualTotal)}
           </Text>
           <Text variant="bodyMedium">
-            Остаток: {formatAmount(budgetSummary.remainingTotal)} ₽
+            Остаток: {formatMoney(budgetSummary.remainingTotal)}
           </Text>
           {budgetSummary.isOverBudget ? (
             <Text variant="bodyMedium" style={styles.warning}>
@@ -80,9 +80,9 @@ export function ReportProjectSection({
               <Card.Content>
                 <Text variant="titleSmall">{item.name}</Text>
                 <Text variant="bodySmall">
-                  План: {formatAmount(item.plannedAmount)} ₽ · Факт:{' '}
-                  {formatAmount(item.actualAmount)} ₽ · Остаток:{' '}
-                  {formatAmount(item.remainingAmount)} ₽
+                  План: {formatMoney(item.plannedAmount)} · Факт:{' '}
+                  {formatMoney(item.actualAmount)} · Остаток:{' '}
+                  {formatMoney(item.remainingAmount)}
                 </Text>
                 {item.isOverBudget ? (
                   <Text variant="bodySmall" style={styles.warning}>
@@ -98,8 +98,8 @@ export function ReportProjectSection({
       <View style={styles.expenses}>
         <Text variant="titleSmall" style={styles.blockTitle}>
           {hasPeriodFilter
-            ? `Расходы за период: ${formatAmount(periodTotal)} ₽`
-            : `Расходы: ${formatAmount(periodTotal)} ₽`}
+            ? `Расходы за период: ${formatMoney(periodTotal)}`
+            : `Расходы: ${formatMoney(periodTotal)}`}
         </Text>
           {expenseGroups.length === 0 ? (
             <Text variant="bodyMedium" style={styles.empty}>
@@ -118,7 +118,7 @@ export function ReportProjectSection({
                     <Card.Content>
                       <View style={styles.expenseRow}>
                         <Text variant="titleSmall">
-                          {formatAmount(expense.amount)} ₽
+                          {formatMoney(expense.amount)}
                         </Text>
                         <Text variant="bodySmall" style={styles.date}>
                           {formatDate(expense.createdAt)}

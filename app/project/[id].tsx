@@ -49,7 +49,7 @@ import type {
 } from '../../types/entities';
 import { getProjectBudgetSummary } from '../../utils/budget';
 import { groupExpensesByBudgetItem, type ExpenseGroup } from '../../utils/expenses';
-import { formatAmount, formatDate, formatDateOnly } from '../../utils/format';
+import { formatDate, formatDateOnly, formatMoney } from '../../utils/format';
 import { getCurrentCoordinates } from '../../utils/location';
 import { savePhotoFromUri } from '../../utils/photos';
 
@@ -384,7 +384,7 @@ export default function ProjectDetailScreen() {
     <ScreenLayout title={project.name}>
       <Text variant="bodySmall" style={styles.meta}>
         Создан: {formatDate(project.createdAt)} · Дата проекта:{' '}
-        {formatDateOnly(project.date)} · Сумма: {formatAmount(project.amount)} ₽
+        {formatDateOnly(project.date)} · Сумма: {formatMoney(project.amount)}
       </Text>
 
       <ProjectFormFields

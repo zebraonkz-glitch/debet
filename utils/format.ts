@@ -1,8 +1,15 @@
+import { getCurrencySymbol } from './settings';
+
 export function formatAmount(value: number): string {
   return new Intl.NumberFormat('ru-RU', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(value);
+}
+
+export function formatMoney(value: number, symbol?: string): string {
+  const currencySymbol = symbol ?? getCurrencySymbol();
+  return `${formatAmount(value)} ${currencySymbol}`;
 }
 
 export function formatDateOnly(iso: string): string {

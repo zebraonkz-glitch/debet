@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Button, Card, Text } from 'react-native-paper';
 
 import type { ExpenseGroup } from '../../utils/expenses';
-import { formatAmount, formatDate } from '../../utils/format';
+import { formatDate, formatMoney } from '../../utils/format';
 
 type ProjectExpensesListProps = {
   groups: ExpenseGroup[];
@@ -46,7 +46,7 @@ export function ProjectExpensesList({ groups, onAdd }: ProjectExpensesListProps)
                   <Card.Content>
                     <View style={styles.row}>
                       <Text variant="titleSmall" style={styles.amount}>
-                        {formatAmount(expense.amount)} ₽
+                        {formatMoney(expense.amount)}
                       </Text>
                       <Text variant="bodySmall" style={styles.date}>
                         {formatDate(expense.createdAt)}

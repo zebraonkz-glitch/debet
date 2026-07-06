@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { Button, Dialog, Portal, TextInput } from 'react-native-paper';
 
+import { useSettings } from '../../contexts/SettingsContext';
 import type { BudgetItem } from '../../types/entities';
 
 export type BudgetItemFormValues = {
@@ -27,6 +28,7 @@ export function BudgetItemDialog({
   onDismiss,
   onSubmit,
 }: BudgetItemDialogProps) {
+  const { settings } = useSettings();
   const [name, setName] = useState('');
   const [plannedAmount, setPlannedAmount] = useState('');
   const [order, setOrder] = useState('0');
@@ -94,7 +96,7 @@ export function BudgetItemDialog({
             style={styles.input}
           />
           <TextInput
-            label="Плановая сумма, ₽"
+            label={`Плановая сумма, ${settings.currencySymbol}`}
             value={plannedAmount}
             onChangeText={setPlannedAmount}
             mode="outlined"

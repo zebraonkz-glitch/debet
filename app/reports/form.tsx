@@ -5,7 +5,7 @@ import { Card, Text } from 'react-native-paper';
 
 import { ReportProjectSection } from '../../components/reports/ReportProjectSection';
 import { ScreenLayout } from '../../components/ScreenLayout';
-import { formatAmount, formatDateOnly } from '../../utils/format';
+import { formatDateOnly, formatMoney } from '../../utils/format';
 import {
   buildReport,
   parseReportDateParam,
@@ -97,17 +97,17 @@ export default function ReportFormScreen() {
                 {report.sections.length === 1 ? 'проекту' : 'проектам'}
               </Text>
               <Text variant="bodyMedium">
-                План: {formatAmount(report.totals.planned)} ₽
+                План: {formatMoney(report.totals.planned)}
               </Text>
               <Text variant="bodyMedium">
-                Факт: {formatAmount(report.totals.actual)} ₽
+                Факт: {formatMoney(report.totals.actual)}
               </Text>
               <Text variant="bodyMedium">
-                Остаток: {formatAmount(report.totals.remaining)} ₽
+                Остаток: {formatMoney(report.totals.remaining)}
               </Text>
               {hasPeriodFilter ? (
                 <Text variant="bodyMedium">
-                  Расходы за период: {formatAmount(report.totals.periodExpenses)} ₽
+                  Расходы за период: {formatMoney(report.totals.periodExpenses)}
                 </Text>
               ) : null}
               {report.overBudgetProjectNames.length > 0 ? (

@@ -2,7 +2,7 @@ import { Alert, StyleSheet, View } from 'react-native';
 import { Button, Card, IconButton, Text } from 'react-native-paper';
 
 import type { BudgetItemSummary, ProjectBudgetSummary } from '../../types/entities';
-import { formatAmount } from '../../utils/format';
+import { formatMoney } from '../../utils/format';
 
 type BudgetSectionProps = {
   summary: ProjectBudgetSummary;
@@ -52,13 +52,13 @@ export function BudgetSection({
       <Card style={[styles.summaryCard, summary.isOverBudget && styles.overBudgetCard]}>
         <Card.Content>
           <Text variant="bodyMedium">
-            План: {formatAmount(summary.plannedTotal)} ₽
+            План: {formatMoney(summary.plannedTotal)}
           </Text>
           <Text variant="bodyMedium">
-            Факт: {formatAmount(summary.actualTotal)} ₽
+            Факт: {formatMoney(summary.actualTotal)}
           </Text>
           <Text variant="bodyMedium">
-            Остаток: {formatAmount(summary.remainingTotal)} ₽
+            Остаток: {formatMoney(summary.remainingTotal)}
           </Text>
           {summary.isOverBudget ? (
             <Text variant="bodyMedium" style={styles.warning}>
@@ -102,9 +102,9 @@ export function BudgetSection({
                       </Text>
                     ) : null}
                     <Text variant="bodySmall" style={styles.amounts}>
-                      План: {formatAmount(item.plannedAmount)} ₽ · Факт:{' '}
-                      {formatAmount(item.actualAmount)} ₽ · Остаток:{' '}
-                      {formatAmount(item.remainingAmount)} ₽
+                      План: {formatMoney(item.plannedAmount)} · Факт:{' '}
+                      {formatMoney(item.actualAmount)} · Остаток:{' '}
+                      {formatMoney(item.remainingAmount)}
                     </Text>
                     {item.isOverBudget ? (
                       <Text variant="bodySmall" style={styles.warning}>

@@ -9,6 +9,7 @@ import { PaperProvider, Portal } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { getDatabase } from '../db';
+import { SettingsProvider } from '../contexts/SettingsContext';
 import { theme } from '../theme';
 
 export default function RootLayout() {
@@ -21,16 +22,18 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
-        <PaperProvider
-          theme={theme}
-          settings={{
-            icon: (props) => <MaterialCommunityIcons {...props} />,
-          }}
-        >
-          <Portal.Host>
-            <Stack screenOptions={{ headerShown: false }} />
-          </Portal.Host>
-        </PaperProvider>
+        <SettingsProvider>
+          <PaperProvider
+            theme={theme}
+            settings={{
+              icon: (props) => <MaterialCommunityIcons {...props} />,
+            }}
+          >
+            <Portal.Host>
+              <Stack screenOptions={{ headerShown: false }} />
+            </Portal.Host>
+          </PaperProvider>
+        </SettingsProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

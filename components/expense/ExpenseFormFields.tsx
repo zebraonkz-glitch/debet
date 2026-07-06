@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { Chip, Text, TextInput } from 'react-native-paper';
 
 import { DateField } from '../common/DateField';
+import { useSettings } from '../../contexts/SettingsContext';
 import type { BudgetItem, Project } from '../../types/entities';
 
 export type ExpenseFormValues = {
@@ -27,6 +28,7 @@ export function ExpenseFormFields({
   onChange,
   showProjectPicker = true,
 }: ExpenseFormFieldsProps) {
+  const { settings } = useSettings();
   const update = (patch: Partial<ExpenseFormValues>) => {
     onChange({ ...values, ...patch });
   };
@@ -93,7 +95,7 @@ export function ExpenseFormFields({
       </View>
 
       <TextInput
-        label="Сумма, ₽"
+        label={`Сумма, ${settings.currencySymbol}`}
         value={values.amount}
         onChangeText={(amount) => update({ amount })}
         mode="outlined"

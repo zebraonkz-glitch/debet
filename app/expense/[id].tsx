@@ -21,7 +21,7 @@ import {
 } from '../../repositories/expenseRepository';
 import { getProjectById } from '../../repositories/projectRepository';
 import type { BudgetItem, Expense, Project } from '../../types/entities';
-import { formatAmount, formatDate } from '../../utils/format';
+import { formatDate, formatMoney } from '../../utils/format';
 
 export default function ExpenseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -166,7 +166,7 @@ export default function ExpenseDetailScreen() {
   return (
     <ScreenLayout title="Расход">
       <Text variant="bodySmall" style={styles.meta}>
-        Создан: {formatDate(expense.createdAt)} · Сумма: {formatAmount(expense.amount)} ₽
+        Создан: {formatDate(expense.createdAt)} · Сумма: {formatMoney(expense.amount)}
       </Text>
 
       <View style={styles.links}>
