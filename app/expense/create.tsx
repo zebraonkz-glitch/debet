@@ -63,14 +63,18 @@ export default function CreateExpenseScreen() {
 
     setSaving(true);
     try {
-      const expense = await createExpense({
+      await createExpense({
         projectId: values.projectId,
         amount,
         description: values.description.trim(),
         createdAt: values.date.toISOString(),
       });
 
-      router.replace(`/expense/${expense.id}`);
+      if (projectIdParam) {
+        router.replace(`/project/${values.projectId}`);
+      } else {
+        router.replace('/expenses');
+      }
     } catch (error) {
       console.error(error);
       setErrorMessage('Не удалось сохранить расход');
