@@ -1,10 +1,12 @@
 import { useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
-import { Text } from 'react-native-paper';
+import MapView from 'react-native-maps/src/MapView';
+import Marker from 'react-native-maps/src/MapMarker';
+import { Button, Text } from 'react-native-paper';
 
 import { ScreenLayout } from '../../components/ScreenLayout';
 import { formatCoordinates } from '../../utils/format';
+import { openInMaps } from '../../utils/openInMaps';
 
 export default function ProjectMapScreen() {
   const { lat, lng, name } = useLocalSearchParams<{
@@ -16,6 +18,7 @@ export default function ProjectMapScreen() {
   const latitude = Number(lat);
   const longitude = Number(lng);
   const hasCoordinates = Number.isFinite(latitude) && Number.isFinite(longitude);
+  const projectName = name ?? 'Проект';
 
   if (!hasCoordinates) {
     return (
@@ -26,10 +29,11 @@ export default function ProjectMapScreen() {
   }
 
   return (
-    <ScreenLayout title={name ?? 'Карта'} scrollable={false}>
+    <ScreenLayout title={projectName} scrollable={false}>
       <Text variant="bodyMedium" style={styles.coords}>
         {formatCoordinates(latitude, longitude)}
       </Text>
+
       <View style={styles.mapContainer}>
         <MapView
           style={styles.map}
@@ -42,10 +46,19 @@ export default function ProjectMapScreen() {
         >
           <Marker
             coordinate={{ latitude, longitude }}
-            title={name ?? 'Проект'}
+            title={projectName}
           />
         </MapView>
       </View>
+
+      <Button
+        mode="outlined"
+        icon="open-in-new"
+        onPress={() => openInMaps(latitude, longitude, projectName)}
+        style={styles.externalButton}
+      >
+        Открыть в приложении «Карты»
+      </Button>
     </ScreenLayout>
   );
 }
@@ -57,10 +70,13 @@ const styles = StyleSheet.create({
   },
   mapContainer: {
     flex: 1,
-    paddingBottom: 20,
+    paddingBottom: 12,
   },
   map: {
     flex: 1,
     borderRadius: 12,
+  },
+  externalButton: {
+    marginBottom: 8,
   },
 });
