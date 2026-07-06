@@ -4,60 +4,48 @@ import { FlatList, StyleSheet, View } from 'react-native';
 import {
   ActivityIndicator,
   Button,
-  Chip,
   FAB,
   Snackbar,
   Text,
 } from 'react-native-paper';
 
 import { DateField } from '../../components/common/DateField';
+import { ExpenseListCard } from '../../components/expense/ExpenseListCard';
 import { ScreenLayout } from '../../components/ScreenLayout';
-import { ProjectListCard } from '../../components/project/ProjectListCard';
+import { getAllExpenses } from '../../repositories/expenseRepository';
 import { getAllProjects } from '../../repositories/projectRepository';
-import type { Project } from '../../types/entities';
-import {
-  filterProjectsByFlags,
-  isProjectDateInPeriod,
-  sortProjectsByDate,
-} from '../../utils/projects';
+import type { Expense, Project } from '../../types/entities';
+import { isExpenseDateInPeriod, sortExpensesByDate } from '../../utils/expenses';
 
-type ProjectFilter = 'all' | 'finished' | 'liked';
-
-const FILTERS: { id: ProjectFilter; label: string }[] = [
-  { id: 'all', label: 'Все' },
-  { id: 'finished', label: 'Закончен' },
-  { id: 'liked', label: 'Понравилось' },
-];
-
-export default function ProjectsScreen() {
+export default function ExpensesScreen() {
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [filter, setFilter] = useState<ProjectFilter>('all');
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const visibleProjects = useMemo(() => {
-    const flagged =
-      filter === 'all'
-        ? projects
-        : filterProjectsByFlags(projects, {
-            finished: filter === 'finished' ? true : undefined,
-            liked: filter === 'liked' ? true : undefined,
-          });
+  const projectNames = useMemo(() => {
+    return new Map(projects.map((project) => [project.id, project.name]));
+  }, [projects]);
 
-    const inPeriod = flagged.filter((project) =>
-      isProjectDateInPeriod(project, fromDate, toDate),
+  const visibleExpenses = useMemo(() => {
+    const inPeriod = expenses.filter((expense) =>
+      isExpenseDateInPeriod(expense, fromDate, toDate),
     );
 
-    return sortProjectsByDate(inPeriod);
-  }, [filter, fromDate, projects, toDate]);
+    return sortExpensesByDate(inPeriod);
+  }, [expenses, fromDate, toDate]);
 
-  const loadProjects = useCallback(async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getAllProjects();
-      setProjects(data);
+      const [loadedExpenses, loadedProjects] = await Promise.all([
+        getAllExpenses(),
+        getAllProjects(),
+      ]);
+      setExpenses(loadedExpenses);
+      setProjects(loadedProjects);
     } finally {
       setLoading(false);
     }
@@ -65,8 +53,8 @@ export default function ProjectsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      void loadProjects();
-    }, [loadProjects]),
+      void loadData();
+    }, [loadData]),
   );
 
   const handlePeriodChange = (nextFrom: Date | null, nextTo: Date | null) => {
@@ -81,19 +69,6 @@ export default function ProjectsScreen() {
 
   const listHeader = (
     <View style={styles.header}>
-      <View style={styles.filters}>
-        {FILTERS.map((item) => (
-          <Chip
-            key={item.id}
-            selected={filter === item.id}
-            onPress={() => setFilter(item.id)}
-            style={styles.chip}
-          >
-            {item.label}
-          </Chip>
-        ))}
-      </View>
-
       <Text variant="titleSmall" style={styles.periodTitle}>
         Период отображения
       </Text>
@@ -136,21 +111,26 @@ export default function ProjectsScreen() {
   );
 
   return (
-    <ScreenLayout title="Проекты" scrollable={false}>
+    <ScreenLayout title="Расходы" scrollable={false}>
       {loading ? (
         <ActivityIndicator style={styles.loader} />
-      ) : visibleProjects.length === 0 ? (
+      ) : visibleExpenses.length === 0 ? (
         <View style={styles.emptyContainer}>
           {listHeader}
           <Text variant="bodyLarge" style={styles.empty}>
-            Проекты не найдены
+            Расходы не найдены
           </Text>
         </View>
       ) : (
         <FlatList
-          data={visibleProjects}
+          data={visibleExpenses}
           keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => <ProjectListCard project={item} />}
+          renderItem={({ item }) => (
+            <ExpenseListCard
+              expense={item}
+              projectName={projectNames.get(item.projectId) ?? 'Без проекта'}
+            />
+          )}
           ListHeaderComponent={listHeader}
           contentContainerStyle={styles.list}
         />
@@ -159,7 +139,7 @@ export default function ProjectsScreen() {
       <FAB
         icon="plus"
         style={styles.fab}
-        onPress={() => router.push('/project/create')}
+        onPress={() => router.push('/expense/create')}
       />
 
       <Snackbar
@@ -176,15 +156,6 @@ export default function ProjectsScreen() {
 const styles = StyleSheet.create({
   header: {
     paddingBottom: 8,
-  },
-  filters: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
-  },
-  chip: {
-    backgroundColor: '#ffffff',
   },
   periodTitle: {
     color: '#1a1a2e',

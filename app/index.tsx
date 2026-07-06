@@ -16,12 +16,12 @@ const MENU_ITEMS: MenuItem[] = [
     href: '/project/create',
   },
   {
-    title: 'Создать расход',
-    subtitle: 'Добавить расход',
-    href: '/expense/create',
+    title: 'Расходы',
+    subtitle: 'Список расходов по дате',
+    href: '/expenses',
   },
   {
-    title: 'Журнал',
+    title: 'Проекты',
     subtitle: 'Список проектов по дате',
     href: '/projects',
   },

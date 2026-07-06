@@ -45,6 +45,15 @@ export async function getExpensesByProjectId(projectId: number): Promise<Expense
   return rows.map(mapExpense);
 }
 
+export async function getAllExpenses(): Promise<Expense[]> {
+  const db = await getDatabase();
+  const rows = await db.getAllAsync<ExpenseRow>(
+    'SELECT * FROM expenses ORDER BY created_at DESC',
+  );
+
+  return rows.map(mapExpense);
+}
+
 export async function getExpensesByProjectAndPeriod(
   projectId: number,
   fromDate?: string,

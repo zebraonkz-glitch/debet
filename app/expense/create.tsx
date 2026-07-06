@@ -80,7 +80,7 @@ export default function CreateExpenseScreen() {
   };
 
   return (
-    <ScreenLayout title="Создать расход">
+    <ScreenLayout title="Новый расход">
       <ExpenseFormFields
         projects={projects}
         values={values}
