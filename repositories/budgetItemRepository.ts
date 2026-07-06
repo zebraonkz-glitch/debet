@@ -94,3 +94,45 @@ export async function deleteBudgetItem(id: number): Promise<boolean> {
   const result = await db.runAsync('DELETE FROM budget_items WHERE id = ?', id);
   return result.changes > 0;
 }
+
+export async function reorderBudgetItem(
+  projectId: number,
+  itemId: number,
+  direction: 'up' | 'down',
+): Promise<BudgetItem[]> {
+  const db = await getDatabase();
+  const rows = await db.getAllAsync<BudgetItemRow>(
+    'SELECT * FROM budget_items WHERE project_id = ? ORDER BY sort_order ASC, id ASC',
+    projectId,
+  );
+  const items = rows.map(mapBudgetItem);
+  const index = items.findIndex((item) => item.id === itemId);
+
+  if (index === -1) {
+    return items;
+  }
+
+  const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+  if (targetIndex < 0 || targetIndex >= items.length) {
+    return items;
+  }
+
+  const current = items[index];
+  const target = items[targetIndex];
+
+  await db.withTransactionAsync(async () => {
+    await db.runAsync(
+      'UPDATE budget_items SET sort_order = ? WHERE id = ?',
+      target.order,
+      current.id,
+    );
+    await db.runAsync(
+      'UPDATE budget_items SET sort_order = ? WHERE id = ?',
+      current.order,
+      target.id,
+    );
+  });
+
+  return getBudgetItemsByProjectId(projectId);
+}

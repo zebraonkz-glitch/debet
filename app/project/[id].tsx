@@ -9,7 +9,8 @@ import {
 } from 'react-native-paper';
 
 import { ScreenLayout } from '../../components/ScreenLayout';
-import { BudgetOverview } from '../../components/project/BudgetOverview';
+import { BudgetItemDialog } from '../../components/project/BudgetItemDialog';
+import { BudgetSection } from '../../components/project/BudgetSection';
 import { ExecutorDialog } from '../../components/project/ExecutorDialog';
 import { ExecutorsList } from '../../components/project/ExecutorsList';
 import {
@@ -18,6 +19,12 @@ import {
 } from '../../components/project/ProjectFormFields';
 import { ProjectPhotoPicker } from '../../components/project/ProjectPhotoPicker';
 import { SavedPhotoGallery } from '../../components/project/SavedPhotoGallery';
+import {
+  createBudgetItem,
+  deleteBudgetItem,
+  reorderBudgetItem,
+  updateBudgetItem,
+} from '../../repositories/budgetItemRepository';
 import { createExecutor } from '../../repositories/executorRepository';
 import { createPhoto, deletePhoto, getPhotosByProjectId } from '../../repositories/photoRepository';
 import {
@@ -30,7 +37,13 @@ import {
   linkExecutorToProject,
   unlinkExecutorFromProject,
 } from '../../repositories/projectExecutorRepository';
-import type { Executor, Photo, Project, ProjectBudgetSummary } from '../../types/entities';
+import type {
+  BudgetItemSummary,
+  Executor,
+  Photo,
+  Project,
+  ProjectBudgetSummary,
+} from '../../types/entities';
 import { getProjectBudgetSummary } from '../../utils/budget';
 import { formatDate } from '../../utils/format';
 import { getCurrentCoordinates } from '../../utils/location';
@@ -52,7 +65,21 @@ export default function ProjectDetailScreen() {
   );
   const [executors, setExecutors] = useState<Executor[]>([]);
   const [executorDialogVisible, setExecutorDialogVisible] = useState(false);
+  const [budgetDialogVisible, setBudgetDialogVisible] = useState(false);
+  const [budgetDialogMode, setBudgetDialogMode] = useState<'create' | 'edit'>('create');
+  const [editingBudgetItem, setEditingBudgetItem] = useState<BudgetItemSummary | null>(
+    null,
+  );
+  const [suggestedBudgetOrder, setSuggestedBudgetOrder] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const refreshBudgetSummary = useCallback(async () => {
+    if (!Number.isFinite(projectId)) {
+      return;
+    }
+
+    setBudgetSummary(await getProjectBudgetSummary(projectId));
+  }, [projectId]);
 
   const loadProject = useCallback(async () => {
     if (!Number.isFinite(projectId)) {
@@ -161,7 +188,7 @@ export default function ProjectDetailScreen() {
       const loadedPhotos = await getPhotosByProjectId(project.id);
       setPhotos(loadedPhotos);
       setPendingPhotos([]);
-      setBudgetSummary(await getProjectBudgetSummary(project.id));
+      await refreshBudgetSummary();
     } catch (error) {
       console.error(error);
       setErrorMessage('Не удалось сохранить изменения');
@@ -232,6 +259,79 @@ export default function ProjectDetailScreen() {
     });
   };
 
+  const openCreateBudgetDialog = () => {
+    const nextOrder = budgetSummary?.items.length ?? 0;
+    setSuggestedBudgetOrder(nextOrder);
+    setBudgetDialogMode('create');
+    setEditingBudgetItem(null);
+    setBudgetDialogVisible(true);
+  };
+
+  const openEditBudgetDialog = (item: BudgetItemSummary) => {
+    setBudgetDialogMode('edit');
+    setEditingBudgetItem(item);
+    setBudgetDialogVisible(true);
+  };
+
+  const handleSaveBudgetItem = async (input: {
+    name: string;
+    plannedAmount: number;
+    order: number;
+  }) => {
+    if (!project) {
+      return;
+    }
+
+    try {
+      if (budgetDialogMode === 'create') {
+        await createBudgetItem({
+          projectId: project.id,
+          name: input.name,
+          plannedAmount: input.plannedAmount,
+          order: input.order,
+        });
+      } else if (editingBudgetItem) {
+        await updateBudgetItem(editingBudgetItem.id, {
+          name: input.name,
+          plannedAmount: input.plannedAmount,
+          order: input.order,
+        });
+      }
+
+      await refreshBudgetSummary();
+    } catch (error) {
+      console.error(error);
+      setErrorMessage('Не удалось сохранить пункт бюджета');
+    }
+  };
+
+  const handleDeleteBudgetItem = async (item: BudgetItemSummary) => {
+    try {
+      await deleteBudgetItem(item.id);
+      await refreshBudgetSummary();
+    } catch (error) {
+      console.error(error);
+      setErrorMessage('Не удалось удалить пункт бюджета');
+    }
+  };
+
+  const handleMoveBudgetItem = async (
+    item: BudgetItemSummary,
+    direction: 'up' | 'down',
+  ) => {
+    if (!project) {
+      return;
+    }
+
+    try {
+      await reorderBudgetItem(project.id, item.id, direction);
+      await refreshBudgetSummary();
+    } catch (error) {
+      console.error(error);
+      setErrorMessage('Не удалось изменить порядок пунктов');
+    }
+  };
+
   if (loading) {
     return (
       <ScreenLayout title="Проект">
@@ -271,7 +371,16 @@ export default function ProjectDetailScreen() {
         title="Добавить фотографии"
       />
 
-      {budgetSummary ? <BudgetOverview summary={budgetSummary} /> : null}
+      {budgetSummary ? (
+        <BudgetSection
+          summary={budgetSummary}
+          onAdd={openCreateBudgetDialog}
+          onEdit={openEditBudgetDialog}
+          onDelete={handleDeleteBudgetItem}
+          onMoveUp={(item) => handleMoveBudgetItem(item, 'up')}
+          onMoveDown={(item) => handleMoveBudgetItem(item, 'down')}
+        />
+      ) : null}
 
       <ExecutorsList
         executors={executors}
@@ -293,6 +402,15 @@ export default function ProjectDetailScreen() {
           Удалить проект
         </Button>
       </View>
+
+      <BudgetItemDialog
+        visible={budgetDialogVisible}
+        mode={budgetDialogMode}
+        item={editingBudgetItem}
+        suggestedOrder={suggestedBudgetOrder}
+        onDismiss={() => setBudgetDialogVisible(false)}
+        onSubmit={handleSaveBudgetItem}
+      />
 
       <ExecutorDialog
         visible={executorDialogVisible}
