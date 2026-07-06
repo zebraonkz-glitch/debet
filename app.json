@@ -43,7 +43,8 @@
           "cameraPermission": "Приложению нужен доступ к камере для съёмки фото проекта."
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-font"
     ]
   }
 }

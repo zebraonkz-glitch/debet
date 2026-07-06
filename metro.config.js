@@ -25,6 +25,16 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     };
   }
 
+  if (moduleName === 'react-native-reanimated') {
+    return {
+      filePath: path.resolve(
+        __dirname,
+        'node_modules/react-native-reanimated/lib/module/index.js',
+      ),
+      type: 'sourceFile',
+    };
+  }
+
   if (defaultResolveRequest) {
     return defaultResolveRequest(context, moduleName, platform);
   }
