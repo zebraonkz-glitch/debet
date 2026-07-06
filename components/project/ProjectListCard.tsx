@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Card, Chip, Text } from 'react-native-paper';
 
 import type { Project } from '../../types/entities';
-import { formatDate } from '../../utils/format';
+import { formatAmount, formatDateOnly } from '../../utils/format';
 
 type ProjectListCardProps = {
   project: Project;
@@ -23,7 +23,7 @@ export function ProjectListCard({ project }: ProjectListCardProps) {
             </Text>
           ) : null}
           <Text variant="bodySmall" style={styles.date}>
-            {formatDate(project.createdAt)}
+            {formatDateOnly(project.date)} · {formatAmount(project.amount)} ₽
           </Text>
           <View style={styles.chips}>
             {project.finished ? (

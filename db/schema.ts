@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const CREATE_SCHEMA_MIGRATIONS_TABLE = `
   CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -67,4 +67,10 @@ export const MIGRATION_V1 = `
   CREATE INDEX IF NOT EXISTS idx_expenses_project ON expenses(project_id);
   CREATE INDEX IF NOT EXISTS idx_expenses_budget_item ON expenses(budget_item_id);
   CREATE INDEX IF NOT EXISTS idx_photos_project ON photos(project_id);
+`;
+
+export const MIGRATION_V2 = `
+  ALTER TABLE projects ADD COLUMN project_date TEXT;
+  ALTER TABLE projects ADD COLUMN amount REAL NOT NULL DEFAULT 0;
+  UPDATE projects SET project_date = created_at WHERE project_date IS NULL;
 `;

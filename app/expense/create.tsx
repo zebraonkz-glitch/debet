@@ -31,7 +31,6 @@ export default function CreateExpenseScreen() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [values, setValues] = useState<ExpenseFormValues>(INITIAL_VALUES);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -129,8 +128,6 @@ export default function CreateExpenseScreen() {
         budgetItems={budgetItems}
         values={values}
         onChange={setValues}
-        showDatePicker={showDatePicker}
-        onToggleDatePicker={setShowDatePicker}
       />
 
       <View style={styles.actions}>

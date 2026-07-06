@@ -17,6 +17,8 @@ import { savePhotoFromUri } from '../../utils/photos';
 const INITIAL_VALUES: ProjectFormValues = {
   name: '',
   description: '',
+  date: new Date(),
+  amount: '',
   finished: true,
   liked: false,
   dd: null,
@@ -54,11 +56,22 @@ export default function CreateProjectScreen() {
       return;
     }
 
+    const amount = values.amount.trim()
+      ? Number(values.amount.replace(',', '.'))
+      : 0;
+
+    if (values.amount.trim() && (!Number.isFinite(amount) || amount < 0)) {
+      setErrorMessage('Укажите корректную сумму');
+      return;
+    }
+
     setSaving(true);
     try {
       const project = await createProject({
         name: values.name.trim(),
         description: values.description.trim(),
+        date: values.date.toISOString(),
+        amount,
         finished: values.finished,
         liked: values.liked,
         dd: values.dd,

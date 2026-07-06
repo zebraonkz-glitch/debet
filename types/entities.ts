@@ -10,6 +10,8 @@ export type Project = {
   finished: boolean;
   liked: boolean;
   dd: Coordinates | null;
+  date: string;
+  amount: number;
   createdAt: string;
 };
 

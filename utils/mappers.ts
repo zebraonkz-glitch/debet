@@ -15,6 +15,8 @@ type ProjectRow = {
   liked: number;
   latitude: number | null;
   longitude: number | null;
+  project_date: string | null;
+  amount: number;
   created_at: string;
 };
 
@@ -70,6 +72,8 @@ export function mapProject(row: ProjectRow): Project {
     finished: row.visitlater === 0,
     liked: row.liked === 1,
     dd: mapCoordinates(row.latitude, row.longitude),
+    date: row.project_date ?? row.created_at,
+    amount: row.amount ?? 0,
     createdAt: row.created_at,
   };
 }

@@ -34,7 +34,6 @@ export default function ExpenseDetailScreen() {
   const [budgetItem, setBudgetItem] = useState<BudgetItem | null>(null);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [values, setValues] = useState<ExpenseFormValues | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const loadExpense = useCallback(async () => {
@@ -191,8 +190,6 @@ export default function ExpenseDetailScreen() {
         values={values}
         onChange={setValues}
         showProjectPicker={false}
-        showDatePicker={showDatePicker}
-        onToggleDatePicker={setShowDatePicker}
       />
 
       <View style={styles.actions}>

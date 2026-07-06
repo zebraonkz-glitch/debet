@@ -1,12 +1,15 @@
 import { StyleSheet, View } from 'react-native';
 import { Button, Switch, Text, TextInput } from 'react-native-paper';
 
+import { DateField } from '../common/DateField';
 import type { Coordinates } from '../../types/entities';
 import { formatCoordinates } from '../../utils/format';
 
 export type ProjectFormValues = {
   name: string;
   description: string;
+  date: Date;
+  amount: string;
   finished: boolean;
   liked: boolean;
   dd: Coordinates | null;
@@ -46,6 +49,22 @@ export function ProjectFormFields({
         mode="outlined"
         multiline
         numberOfLines={4}
+        style={styles.input}
+      />
+
+      <DateField
+        label="Дата проекта"
+        value={values.date}
+        mode="date"
+        onChange={(date) => update({ date })}
+      />
+
+      <TextInput
+        label="Сумма, ₽"
+        value={values.amount}
+        onChangeText={(amount) => update({ amount })}
+        mode="outlined"
+        keyboardType="decimal-pad"
         style={styles.input}
       />
 
@@ -102,6 +121,9 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: 12,
     backgroundColor: '#ffffff',
+  },
+  block: {
+    marginBottom: 16,
   },
   switchRow: {
     flexDirection: 'row',

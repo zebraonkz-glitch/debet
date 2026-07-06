@@ -3,6 +3,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import {
   CREATE_SCHEMA_MIGRATIONS_TABLE,
   MIGRATION_V1,
+  MIGRATION_V2,
   SCHEMA_VERSION,
 } from './schema';
 
@@ -15,6 +16,10 @@ const MIGRATIONS: Migration[] = [
   {
     version: 1,
     sql: MIGRATION_V1,
+  },
+  {
+    version: 2,
+    sql: MIGRATION_V2,
   },
 ];
 

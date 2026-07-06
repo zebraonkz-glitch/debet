@@ -6,6 +6,8 @@ export type CreateProjectInput = {
   finished?: boolean;
   liked?: boolean;
   dd?: Coordinates | null;
+  date?: string;
+  amount?: number;
   createdAt?: string;
 };
 

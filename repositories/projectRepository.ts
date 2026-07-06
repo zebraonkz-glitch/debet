@@ -10,14 +10,16 @@ export async function createProject(input: CreateProjectInput): Promise<Project>
 
   const result = await db.runAsync(
     `INSERT INTO projects (
-      name, description, visitlater, liked, latitude, longitude, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      name, description, visitlater, liked, latitude, longitude, project_date, amount, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     input.name,
     input.description ?? '',
     input.finished === false ? 1 : 0,
     input.liked ? 1 : 0,
     input.dd?.latitude ?? null,
     input.dd?.longitude ?? null,
+    input.date ?? createdAt,
+    input.amount ?? 0,
     createdAt,
   );
 
@@ -91,7 +93,8 @@ export async function updateProject(
 
   await db.runAsync(
     `UPDATE projects
-     SET name = ?, description = ?, visitlater = ?, liked = ?, latitude = ?, longitude = ?
+     SET name = ?, description = ?, visitlater = ?, liked = ?, latitude = ?, longitude = ?,
+         project_date = ?, amount = ?
      WHERE id = ?`,
     input.name ?? current.name,
     input.description ?? current.description,
@@ -99,6 +102,8 @@ export async function updateProject(
     (input.liked ?? current.liked) ? 1 : 0,
     dd?.latitude ?? null,
     dd?.longitude ?? null,
+    input.date ?? current.date,
+    input.amount ?? current.amount,
     id,
   );
 

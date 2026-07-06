@@ -49,7 +49,7 @@ import type {
 } from '../../types/entities';
 import { getProjectBudgetSummary } from '../../utils/budget';
 import { groupExpensesByBudgetItem, type ExpenseGroup } from '../../utils/expenses';
-import { formatDate } from '../../utils/format';
+import { formatAmount, formatDate, formatDateOnly } from '../../utils/format';
 import { getCurrentCoordinates } from '../../utils/location';
 import { savePhotoFromUri } from '../../utils/photos';
 
@@ -116,6 +116,8 @@ export default function ProjectDetailScreen() {
         setValues({
           name: loadedProject.name,
           description: loadedProject.description,
+          date: new Date(loadedProject.date),
+          amount: String(loadedProject.amount),
           finished: loadedProject.finished,
           liked: loadedProject.liked,
           dd: loadedProject.dd,
@@ -167,11 +169,22 @@ export default function ProjectDetailScreen() {
       return;
     }
 
+    const amount = values.amount.trim()
+      ? Number(values.amount.replace(',', '.'))
+      : 0;
+
+    if (values.amount.trim() && (!Number.isFinite(amount) || amount < 0)) {
+      setErrorMessage('Укажите корректную сумму');
+      return;
+    }
+
     setSaving(true);
     try {
       const updated = await updateProject(project.id, {
         name: values.name.trim(),
         description: values.description.trim(),
+        date: values.date.toISOString(),
+        amount,
         finished: values.finished,
         liked: values.liked,
         dd: values.dd,
@@ -187,6 +200,8 @@ export default function ProjectDetailScreen() {
         setValues({
           name: updated.name,
           description: updated.description,
+          date: new Date(updated.date),
+          amount: String(updated.amount),
           finished: updated.finished,
           liked: updated.liked,
           dd: updated.dd,
@@ -368,7 +383,8 @@ export default function ProjectDetailScreen() {
   return (
     <ScreenLayout title={project.name}>
       <Text variant="bodySmall" style={styles.meta}>
-        Создан: {formatDate(project.createdAt)}
+        Создан: {formatDate(project.createdAt)} · Дата проекта:{' '}
+        {formatDateOnly(project.date)} · Сумма: {formatAmount(project.amount)} ₽
       </Text>
 
       <ProjectFormFields

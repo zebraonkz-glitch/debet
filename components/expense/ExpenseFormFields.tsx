@@ -1,11 +1,8 @@
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Chip, Text, TextInput } from 'react-native-paper';
-import DateTimePicker, {
-  type DateTimePickerEvent,
-} from '@react-native-community/datetimepicker';
 
+import { DateField } from '../common/DateField';
 import type { BudgetItem, Project } from '../../types/entities';
-import { formatDate } from '../../utils/format';
 
 export type ExpenseFormValues = {
   projectId: number | null;
@@ -21,8 +18,6 @@ type ExpenseFormFieldsProps = {
   values: ExpenseFormValues;
   onChange: (values: ExpenseFormValues) => void;
   showProjectPicker?: boolean;
-  showDatePicker: boolean;
-  onToggleDatePicker: (visible: boolean) => void;
 };
 
 export function ExpenseFormFields({
@@ -31,23 +26,9 @@ export function ExpenseFormFields({
   values,
   onChange,
   showProjectPicker = true,
-  showDatePicker,
-  onToggleDatePicker,
 }: ExpenseFormFieldsProps) {
   const update = (patch: Partial<ExpenseFormValues>) => {
     onChange({ ...values, ...patch });
-  };
-
-  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      onToggleDatePicker(false);
-    }
-
-    if (event.type === 'dismissed' || !selectedDate) {
-      return;
-    }
-
-    update({ date: selectedDate });
   };
 
   return (
@@ -130,24 +111,12 @@ export function ExpenseFormFields({
         style={styles.input}
       />
 
-      <View style={styles.block}>
-        <Text variant="titleMedium" style={styles.label}>
-          Дата
-        </Text>
-        <Pressable onPress={() => onToggleDatePicker(true)}>
-          <Text variant="bodyLarge" style={styles.dateValue}>
-            {formatDate(values.date.toISOString())}
-          </Text>
-        </Pressable>
-        {showDatePicker ? (
-          <DateTimePicker
-            value={values.date}
-            mode="datetime"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={handleDateChange}
-          />
-        ) : null}
-      </View>
+      <DateField
+        label="Дата"
+        value={values.date}
+        mode="datetime"
+        onChange={(date) => update({ date })}
+      />
     </View>
   );
 }
@@ -174,8 +143,5 @@ const styles = StyleSheet.create({
   input: {
     marginBottom: 12,
     backgroundColor: '#ffffff',
-  },
-  dateValue: {
-    color: '#1a5fb4',
   },
 });
