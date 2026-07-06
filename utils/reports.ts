@@ -11,6 +11,9 @@ export type ReportProjectSection = {
   periodExpenses: Expense[];
   periodTotal: number;
   expenseGroups: ExpenseGroup[];
+  projectAmount: number;
+  expensesTotal: number;
+  profit: number;
 };
 
 export type ReportTotals = {
@@ -18,6 +21,9 @@ export type ReportTotals = {
   actual: number;
   remaining: number;
   periodExpenses: number;
+  projectAmount: number;
+  expensesTotal: number;
+  profit: number;
 };
 
 export type ReportResult = {
@@ -75,6 +81,11 @@ export async function buildReport(
       (sum, expense) => sum + expense.amount,
       0,
     );
+    const expensesTotal = roundAmount(
+      fromIso || toIso ? periodTotal : budgetSummary.actualTotal,
+    );
+    const projectAmount = roundAmount(project.amount);
+    const profit = roundAmount(projectAmount - expensesTotal);
 
     sections.push({
       project,
@@ -82,6 +93,9 @@ export async function buildReport(
       periodExpenses,
       periodTotal: roundAmount(periodTotal),
       expenseGroups,
+      projectAmount,
+      expensesTotal,
+      profit,
     });
   }
 
@@ -91,14 +105,28 @@ export async function buildReport(
       actual: accumulator.actual + section.budgetSummary.actualTotal,
       remaining: accumulator.remaining + section.budgetSummary.remainingTotal,
       periodExpenses: accumulator.periodExpenses + section.periodTotal,
+      projectAmount: accumulator.projectAmount + section.projectAmount,
+      expensesTotal: accumulator.expensesTotal + section.expensesTotal,
+      profit: accumulator.profit + section.profit,
     }),
-    { planned: 0, actual: 0, remaining: 0, periodExpenses: 0 },
+    {
+      planned: 0,
+      actual: 0,
+      remaining: 0,
+      periodExpenses: 0,
+      projectAmount: 0,
+      expensesTotal: 0,
+      profit: 0,
+    },
   );
 
   totals.planned = roundAmount(totals.planned);
   totals.actual = roundAmount(totals.actual);
   totals.remaining = roundAmount(totals.remaining);
   totals.periodExpenses = roundAmount(totals.periodExpenses);
+  totals.projectAmount = roundAmount(totals.projectAmount);
+  totals.expensesTotal = roundAmount(totals.expensesTotal);
+  totals.profit = roundAmount(totals.profit);
 
   const overBudgetProjectNames = sections
     .filter((section) => section.budgetSummary.isOverBudget)

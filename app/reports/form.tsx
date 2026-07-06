@@ -97,6 +97,25 @@ export default function ReportFormScreen() {
                 {report.sections.length === 1 ? 'проекту' : 'проектам'}
               </Text>
               <Text variant="bodyMedium">
+                Сумма проектов: {formatMoney(report.totals.projectAmount)}
+              </Text>
+              <Text variant="bodyMedium">
+                {hasPeriodFilter ? 'Расходы за период' : 'Расходы'}:{' '}
+                {formatMoney(report.totals.expensesTotal)}
+              </Text>
+              <Text
+                variant="titleMedium"
+                style={[
+                  styles.profitTotal,
+                  report.totals.profit < 0 && styles.warning,
+                ]}
+              >
+                Прибыль: {formatMoney(report.totals.profit)}
+              </Text>
+              <Text variant="bodySmall" style={styles.divider}>
+                Бюджет
+              </Text>
+              <Text variant="bodyMedium">
                 План: {formatMoney(report.totals.planned)}
               </Text>
               <Text variant="bodyMedium">
@@ -107,7 +126,8 @@ export default function ReportFormScreen() {
               </Text>
               {hasPeriodFilter ? (
                 <Text variant="bodyMedium">
-                  Расходы за период: {formatMoney(report.totals.periodExpenses)}
+                  Расходы за период (детализация):{' '}
+                  {formatMoney(report.totals.periodExpenses)}
                 </Text>
               ) : null}
               {report.overBudgetProjectNames.length > 0 ? (
@@ -153,6 +173,16 @@ const styles = StyleSheet.create({
   totalsTitle: {
     color: '#1a1a2e',
     marginBottom: 8,
+  },
+  profitTotal: {
+    color: '#1a5fb4',
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  divider: {
+    color: '#9aa0a6',
+    marginTop: 8,
+    marginBottom: 4,
   },
   warning: {
     color: '#c62828',

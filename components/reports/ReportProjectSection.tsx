@@ -13,7 +13,8 @@ export function ReportProjectSection({
   section,
   hasPeriodFilter,
 }: ReportProjectSectionProps) {
-  const { project, budgetSummary, expenseGroups, periodTotal } = section;
+  const { project, budgetSummary, expenseGroups, periodTotal, projectAmount, expensesTotal, profit } =
+    section;
 
   return (
     <View style={styles.container}>
@@ -37,6 +38,32 @@ export function ReportProjectSection({
           </Chip>
         ) : null}
       </View>
+
+      <Card
+        style={[
+          styles.summaryCard,
+          profit < 0 && styles.lossCard,
+        ]}
+      >
+        <Card.Content>
+          <Text variant="titleSmall" style={styles.blockTitle}>
+            Прибыль
+          </Text>
+          <Text variant="bodyMedium">
+            Сумма проекта: {formatMoney(projectAmount)}
+          </Text>
+          <Text variant="bodyMedium">
+            {hasPeriodFilter ? 'Расходы за период' : 'Расходы'}:{' '}
+            {formatMoney(expensesTotal)}
+          </Text>
+          <Text
+            variant="titleMedium"
+            style={[styles.profitValue, profit < 0 && styles.warning]}
+          >
+            Прибыль: {formatMoney(profit)}
+          </Text>
+        </Card.Content>
+      </Card>
 
       <Card
         style={[
@@ -164,6 +191,14 @@ const styles = StyleSheet.create({
   overBudgetCard: {
     borderColor: '#c62828',
     borderWidth: 1,
+  },
+  lossCard: {
+    borderColor: '#c62828',
+    borderWidth: 1,
+  },
+  profitValue: {
+    color: '#1a5fb4',
+    marginTop: 8,
   },
   blockTitle: {
     color: '#1a1a2e',
