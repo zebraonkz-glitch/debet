@@ -12,7 +12,7 @@ import { ScreenLayout } from '../../components/ScreenLayout';
 import { BudgetItemDialog } from '../../components/project/BudgetItemDialog';
 import { BudgetSection } from '../../components/project/BudgetSection';
 import { ProjectExpensesList } from '../../components/expense/ProjectExpensesList';
-import { ExecutorDialog } from '../../components/project/ExecutorDialog';
+import { LinkExecutorDialog } from '../../components/project/LinkExecutorDialog';
 import { ExecutorsList } from '../../components/project/ExecutorsList';
 import {
   ProjectFormFields,
@@ -228,7 +228,16 @@ export default function ProjectDetailScreen() {
     ]);
   };
 
-  const handleAddExecutor = async (input: {
+  const handleLinkExistingExecutor = async (executorId: number) => {
+    if (!project) {
+      return;
+    }
+
+    await linkExecutorToProject(project.id, executorId);
+    setExecutors(await getExecutorsByProjectId(project.id));
+  };
+
+  const handleCreateAndLinkExecutor = async (input: {
     name: string;
     phone: string;
     email: string;
@@ -425,10 +434,12 @@ export default function ProjectDetailScreen() {
         onSubmit={handleSaveBudgetItem}
       />
 
-      <ExecutorDialog
+      <LinkExecutorDialog
         visible={executorDialogVisible}
+        linkedExecutorIds={executors.map((executor) => executor.id)}
         onDismiss={() => setExecutorDialogVisible(false)}
-        onSubmit={handleAddExecutor}
+        onLinkExisting={handleLinkExistingExecutor}
+        onCreateAndLink={handleCreateAndLinkExecutor}
       />
 
       <Snackbar

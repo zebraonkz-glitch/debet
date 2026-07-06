@@ -1,4 +1,5 @@
-import { Linking, StyleSheet, View } from 'react-native';
+import { router } from 'expo-router';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import { Button, Card, IconButton, Text } from 'react-native-paper';
 
 import type { Executor } from '../../types/entities';
@@ -42,23 +43,18 @@ export function ExecutorsList({
           <Card key={executor.id} style={styles.card}>
             <Card.Content>
               <View style={styles.row}>
-                <View style={styles.info}>
+                <Pressable
+                  style={styles.info}
+                  onPress={() => router.push(`/executor/${executor.id}`)}
+                >
                   <Text variant="titleSmall">{executor.name}</Text>
                   {executor.phone ? (
-                    <Text
-                      variant="bodySmall"
-                      style={styles.link}
-                      onPress={() => openPhone(executor.phone)}
-                    >
+                    <Text variant="bodySmall" style={styles.contact}>
                       {executor.phone}
                     </Text>
                   ) : null}
                   {executor.email ? (
-                    <Text
-                      variant="bodySmall"
-                      style={styles.link}
-                      onPress={() => openEmail(executor.email)}
-                    >
+                    <Text variant="bodySmall" style={styles.contact}>
                       {executor.email}
                     </Text>
                   ) : null}
@@ -67,11 +63,34 @@ export function ExecutorsList({
                       {executor.note}
                     </Text>
                   ) : null}
+                </Pressable>
+
+                <View style={styles.actions}>
+                  {executor.phone ? (
+                    <IconButton
+                      icon="phone"
+                      size={18}
+                      onPress={() => openPhone(executor.phone)}
+                    />
+                  ) : null}
+                  {executor.email ? (
+                    <IconButton
+                      icon="email"
+                      size={18}
+                      onPress={() => openEmail(executor.email)}
+                    />
+                  ) : null}
+                  <IconButton
+                    icon="pencil"
+                    size={18}
+                    onPress={() => router.push(`/executor/${executor.id}`)}
+                  />
+                  <IconButton
+                    icon="link-off"
+                    size={18}
+                    onPress={() => onRemove(executor.id)}
+                  />
                 </View>
-                <IconButton
-                  icon="link-off"
-                  onPress={() => onRemove(executor.id)}
-                />
               </View>
             </Card.Content>
           </Card>
@@ -107,13 +126,20 @@ const styles = StyleSheet.create({
   },
   info: {
     flex: 1,
+    paddingRight: 4,
   },
-  link: {
-    color: '#1a5fb4',
+  contact: {
+    color: '#5c6370',
     marginTop: 2,
   },
   note: {
     color: '#6b7280',
     marginTop: 4,
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: -8,
+    marginRight: -8,
   },
 });
