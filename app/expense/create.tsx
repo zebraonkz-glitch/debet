@@ -8,28 +8,23 @@ import {
   ExpenseFormFields,
   type ExpenseFormValues,
 } from '../../components/expense/ExpenseFormFields';
-import { getBudgetItemsByProjectId } from '../../repositories/budgetItemRepository';
 import { createExpense } from '../../repositories/expenseRepository';
 import { getAllProjects } from '../../repositories/projectRepository';
-import type { BudgetItem, Project } from '../../types/entities';
+import type { Project } from '../../types/entities';
 
 const INITIAL_VALUES: ExpenseFormValues = {
   projectId: null,
-  budgetItemId: null,
   amount: '',
   description: '',
   date: new Date(),
 };
 
 export default function CreateExpenseScreen() {
-  const { projectId: projectIdParam, budgetItemId: budgetItemIdParam } =
-    useLocalSearchParams<{
-      projectId?: string;
-      budgetItemId?: string;
-    }>();
+  const { projectId: projectIdParam } = useLocalSearchParams<{
+    projectId?: string;
+  }>();
 
   const [projects, setProjects] = useState<Project[]>([]);
-  const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
   const [values, setValues] = useState<ExpenseFormValues>(INITIAL_VALUES);
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -43,55 +38,19 @@ export default function CreateExpenseScreen() {
       ? initialProjectId
       : loadedProjects[0]?.id ?? null;
 
-    const initialBudgetItemId = Number(budgetItemIdParam);
-    const budgetItemId = Number.isFinite(initialBudgetItemId)
-      ? initialBudgetItemId
-      : null;
-
     setValues((current) => ({
       ...current,
       projectId,
-      budgetItemId,
     }));
-  }, [projectIdParam, budgetItemIdParam]);
+  }, [projectIdParam]);
 
   useEffect(() => {
     void loadProjects();
   }, [loadProjects]);
 
-  useEffect(() => {
-    const loadBudgetItems = async () => {
-      if (!values.projectId) {
-        setBudgetItems([]);
-        return;
-      }
-
-      const items = await getBudgetItemsByProjectId(values.projectId);
-      setBudgetItems(items);
-
-      if (items.length === 0) {
-        setValues((current) => ({ ...current, budgetItemId: null }));
-        return;
-      }
-
-      setValues((current) => {
-        if (current.budgetItemId && items.some((item) => item.id === current.budgetItemId)) {
-          return current;
-        }
-
-        return {
-          ...current,
-          budgetItemId: items[0]?.id ?? null,
-        };
-      });
-    };
-
-    void loadBudgetItems();
-  }, [values.projectId]);
-
   const handleSave = async () => {
-    if (!values.projectId || !values.budgetItemId) {
-      setErrorMessage('Выберите проект и пункт бюджета');
+    if (!values.projectId) {
+      setErrorMessage('Выберите проект');
       return;
     }
 
@@ -106,7 +65,6 @@ export default function CreateExpenseScreen() {
     try {
       const expense = await createExpense({
         projectId: values.projectId,
-        budgetItemId: values.budgetItemId,
         amount,
         description: values.description.trim(),
         createdAt: values.date.toISOString(),
@@ -125,7 +83,6 @@ export default function CreateExpenseScreen() {
     <ScreenLayout title="Создать расход">
       <ExpenseFormFields
         projects={projects}
-        budgetItems={budgetItems}
         values={values}
         onChange={setValues}
       />

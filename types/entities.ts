@@ -15,19 +15,9 @@ export type Project = {
   createdAt: string;
 };
 
-export type BudgetItem = {
-  id: number;
-  projectId: number;
-  name: string;
-  plannedAmount: number;
-  order: number;
-  createdAt: string;
-};
-
 export type Expense = {
   id: number;
   projectId: number;
-  budgetItemId: number;
   amount: number;
   description: string;
   createdAt: string;
@@ -46,20 +36,4 @@ export type Photo = {
   projectId: number;
   filePath: string;
   createdAt: string;
-};
-
-export type BudgetItemSummary = BudgetItem & {
-  actualAmount: number;
-  remainingAmount: number;
-  isOverBudget: boolean;
-};
-
-export type ProjectBudgetSummary = {
-  projectId: number;
-  plannedTotal: number;
-  actualTotal: number;
-  remainingTotal: number;
-  isOverBudget: boolean;
-  items: BudgetItemSummary[];
-  nextBudgetItem: BudgetItemSummary | null;
 };

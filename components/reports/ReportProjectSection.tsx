@@ -9,8 +9,7 @@ type ReportProjectSectionProps = {
 };
 
 export function ReportProjectSection({ section }: ReportProjectSectionProps) {
-  const { project, budgetSummary, expenseGroups, projectAmount, expensesTotal, profit } =
-    section;
+  const { project, expenses, projectAmount, expensesTotal, profit } = section;
 
   return (
     <View style={styles.container}>
@@ -35,12 +34,7 @@ export function ReportProjectSection({ section }: ReportProjectSectionProps) {
         ) : null}
       </View>
 
-      <Card
-        style={[
-          styles.summaryCard,
-          profit < 0 && styles.lossCard,
-        ]}
-      >
+      <Card style={[styles.summaryCard, profit < 0 && styles.lossCard]}>
         <Card.Content>
           <Text variant="titleSmall" style={styles.blockTitle}>
             Прибыль
@@ -48,9 +42,7 @@ export function ReportProjectSection({ section }: ReportProjectSectionProps) {
           <Text variant="bodyMedium">
             Сумма проекта: {formatMoney(projectAmount)}
           </Text>
-          <Text variant="bodyMedium">
-            Расходы: {formatMoney(expensesTotal)}
-          </Text>
+          <Text variant="bodyMedium">Расходы: {formatMoney(expensesTotal)}</Text>
           <Text
             variant="titleMedium"
             style={[styles.profitValue, profit < 0 && styles.warning]}
@@ -60,99 +52,33 @@ export function ReportProjectSection({ section }: ReportProjectSectionProps) {
         </Card.Content>
       </Card>
 
-      <Card
-        style={[
-          styles.summaryCard,
-          budgetSummary.isOverBudget && styles.overBudgetCard,
-        ]}
-      >
-        <Card.Content>
-          <Text variant="titleSmall" style={styles.blockTitle}>
-            Бюджет проекта
-          </Text>
-          <Text variant="bodyMedium">
-            План: {formatMoney(budgetSummary.plannedTotal)}
-          </Text>
-          <Text variant="bodyMedium">
-            Факт: {formatMoney(budgetSummary.actualTotal)}
-          </Text>
-          <Text variant="bodyMedium">
-            Остаток: {formatMoney(budgetSummary.remainingTotal)}
-          </Text>
-          {budgetSummary.isOverBudget ? (
-            <Text variant="bodyMedium" style={styles.warning}>
-              Превышение бюджета
-            </Text>
-          ) : null}
-          {budgetSummary.nextBudgetItem ? (
-            <Text variant="bodySmall" style={styles.nextItem}>
-              Следующий пункт: {budgetSummary.nextBudgetItem.name}
-            </Text>
-          ) : null}
-        </Card.Content>
-      </Card>
-
-      {budgetSummary.items.length > 0 ? (
-        <View style={styles.budgetItems}>
-          <Text variant="titleSmall" style={styles.blockTitle}>
-            По пунктам бюджета
-          </Text>
-          {budgetSummary.items.map((item) => (
-            <Card key={item.id} style={styles.itemCard} mode="outlined">
-              <Card.Content>
-                <Text variant="titleSmall">{item.name}</Text>
-                <Text variant="bodySmall">
-                  План: {formatMoney(item.plannedAmount)} · Факт:{' '}
-                  {formatMoney(item.actualAmount)} · Остаток:{' '}
-                  {formatMoney(item.remainingAmount)}
-                </Text>
-                {item.isOverBudget ? (
-                  <Text variant="bodySmall" style={styles.warning}>
-                    Превышение по пункту
-                  </Text>
-                ) : null}
-              </Card.Content>
-            </Card>
-          ))}
-        </View>
-      ) : null}
-
       <View style={styles.expenses}>
         <Text variant="titleSmall" style={styles.blockTitle}>
           Расходы: {formatMoney(expensesTotal)}
         </Text>
-          {expenseGroups.length === 0 ? (
-            <Text variant="bodyMedium" style={styles.empty}>
-              Расходов пока нет
-            </Text>
-          ) : (
-            expenseGroups.map((group) => (
-              <View key={group.budgetItemId} style={styles.group}>
-                <Text variant="titleSmall" style={styles.groupTitle}>
-                  {group.budgetItemName}
-                </Text>
-                {group.expenses.map((expense) => (
-                  <Card key={expense.id} style={styles.expenseCard} mode="elevated">
-                    <Card.Content>
-                      <View style={styles.expenseRow}>
-                        <Text variant="titleSmall">
-                          {formatMoney(expense.amount)}
-                        </Text>
-                        <Text variant="bodySmall" style={styles.date}>
-                          {formatDate(expense.createdAt)}
-                        </Text>
-                      </View>
-                      {expense.description ? (
-                        <Text variant="bodyMedium" style={styles.description}>
-                          {expense.description}
-                        </Text>
-                      ) : null}
-                    </Card.Content>
-                  </Card>
-                ))}
-              </View>
-            ))
-          )}
+        {expenses.length === 0 ? (
+          <Text variant="bodyMedium" style={styles.empty}>
+            Расходов пока нет
+          </Text>
+        ) : (
+          expenses.map((expense) => (
+            <Card key={expense.id} style={styles.expenseCard} mode="elevated">
+              <Card.Content>
+                <View style={styles.expenseRow}>
+                  <Text variant="titleSmall">{formatMoney(expense.amount)}</Text>
+                  <Text variant="bodySmall" style={styles.date}>
+                    {formatDate(expense.createdAt)}
+                  </Text>
+                </View>
+                {expense.description ? (
+                  <Text variant="bodyMedium" style={styles.description}>
+                    {expense.description}
+                  </Text>
+                ) : null}
+              </Card.Content>
+            </Card>
+          ))
+        )}
       </View>
     </View>
   );
@@ -179,17 +105,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     marginBottom: 12,
   },
-  overBudgetCard: {
-    borderColor: '#c62828',
-    borderWidth: 1,
-  },
   lossCard: {
     borderColor: '#c62828',
     borderWidth: 1,
-  },
-  profitValue: {
-    color: '#1a5fb4',
-    marginTop: 8,
   },
   blockTitle: {
     color: '#1a1a2e',
@@ -199,29 +117,15 @@ const styles = StyleSheet.create({
     color: '#c62828',
     marginTop: 4,
   },
-  nextItem: {
+  profitValue: {
     color: '#1a5fb4',
-    marginTop: 4,
-  },
-  budgetItems: {
-    marginBottom: 12,
-  },
-  itemCard: {
-    marginBottom: 8,
-    backgroundColor: '#ffffff',
+    marginTop: 8,
   },
   expenses: {
     marginTop: 4,
   },
   empty: {
     color: '#6b7280',
-  },
-  group: {
-    marginBottom: 8,
-  },
-  groupTitle: {
-    color: '#1a5fb4',
-    marginBottom: 6,
   },
   expenseCard: {
     marginBottom: 8,

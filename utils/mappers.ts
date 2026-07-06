@@ -1,5 +1,4 @@
 import type {
-  BudgetItem,
   Coordinates,
   Executor,
   Expense,
@@ -20,19 +19,9 @@ type ProjectRow = {
   created_at: string;
 };
 
-type BudgetItemRow = {
-  id: number;
-  project_id: number;
-  name: string;
-  planned_amount: number;
-  sort_order: number;
-  created_at: string;
-};
-
 type ExpenseRow = {
   id: number;
   project_id: number;
-  budget_item_id: number;
   amount: number;
   description: string;
   created_at: string;
@@ -78,22 +67,10 @@ export function mapProject(row: ProjectRow): Project {
   };
 }
 
-export function mapBudgetItem(row: BudgetItemRow): BudgetItem {
-  return {
-    id: row.id,
-    projectId: row.project_id,
-    name: row.name,
-    plannedAmount: row.planned_amount,
-    order: row.sort_order,
-    createdAt: row.created_at,
-  };
-}
-
 export function mapExpense(row: ExpenseRow): Expense {
   return {
     id: row.id,
     projectId: row.project_id,
-    budgetItemId: row.budget_item_id,
     amount: row.amount,
     description: row.description,
     createdAt: row.created_at,
@@ -120,7 +97,6 @@ export function mapPhoto(row: PhotoRow): Photo {
 }
 
 export type {
-  BudgetItemRow,
   ExecutorRow,
   ExpenseRow,
   PhotoRow,

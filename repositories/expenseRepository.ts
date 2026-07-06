@@ -9,10 +9,9 @@ export async function createExpense(input: CreateExpenseInput): Promise<Expense>
 
   const result = await db.runAsync(
     `INSERT INTO expenses (
-      project_id, budget_item_id, amount, description, created_at
-    ) VALUES (?, ?, ?, ?, ?)`,
+      project_id, amount, description, created_at
+    ) VALUES (?, ?, ?, ?)`,
     input.projectId,
-    input.budgetItemId,
     input.amount,
     input.description ?? '',
     createdAt,
@@ -41,18 +40,6 @@ export async function getExpensesByProjectId(projectId: number): Promise<Expense
   const rows = await db.getAllAsync<ExpenseRow>(
     'SELECT * FROM expenses WHERE project_id = ? ORDER BY created_at DESC',
     projectId,
-  );
-
-  return rows.map(mapExpense);
-}
-
-export async function getExpensesByBudgetItemId(
-  budgetItemId: number,
-): Promise<Expense[]> {
-  const db = await getDatabase();
-  const rows = await db.getAllAsync<ExpenseRow>(
-    'SELECT * FROM expenses WHERE budget_item_id = ? ORDER BY created_at DESC',
-    budgetItemId,
   );
 
   return rows.map(mapExpense);
@@ -98,9 +85,9 @@ export async function updateExpense(
 
   await db.runAsync(
     `UPDATE expenses
-     SET budget_item_id = ?, amount = ?, description = ?, created_at = ?
+     SET project_id = ?, amount = ?, description = ?, created_at = ?
      WHERE id = ?`,
-    input.budgetItemId ?? current.budgetItemId,
+    input.projectId ?? current.projectId,
     input.amount ?? current.amount,
     input.description ?? current.description,
     input.createdAt ?? current.createdAt,
@@ -121,18 +108,6 @@ export async function getExpenseTotalByProject(projectId: number): Promise<numbe
   const row = await db.getFirstAsync<{ total: number | null }>(
     'SELECT COALESCE(SUM(amount), 0) AS total FROM expenses WHERE project_id = ?',
     projectId,
-  );
-
-  return row?.total ?? 0;
-}
-
-export async function getExpenseTotalByBudgetItem(
-  budgetItemId: number,
-): Promise<number> {
-  const db = await getDatabase();
-  const row = await db.getFirstAsync<{ total: number | null }>(
-    'SELECT COALESCE(SUM(amount), 0) AS total FROM expenses WHERE budget_item_id = ?',
-    budgetItemId,
   );
 
   return row?.total ?? 0;

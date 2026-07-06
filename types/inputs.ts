@@ -13,29 +13,17 @@ export type CreateProjectInput = {
 
 export type UpdateProjectInput = Partial<CreateProjectInput>;
 
-export type CreateBudgetItemInput = {
-  projectId: number;
-  name: string;
-  plannedAmount: number;
-  order?: number;
-  createdAt?: string;
-};
-
-export type UpdateBudgetItemInput = Partial<
-  Omit<CreateBudgetItemInput, 'projectId'>
->;
-
 export type CreateExpenseInput = {
   projectId: number;
-  budgetItemId: number;
   amount: number;
   description?: string;
   createdAt?: string;
 };
 
-export type UpdateExpenseInput = Partial<
-  Omit<CreateExpenseInput, 'projectId'>
-> & {
+export type UpdateExpenseInput = {
+  projectId?: number;
+  amount?: number;
+  description?: string;
   createdAt?: string;
 };
 

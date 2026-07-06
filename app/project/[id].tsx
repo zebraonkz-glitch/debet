@@ -9,8 +9,6 @@ import {
 } from 'react-native-paper';
 
 import { ScreenLayout } from '../../components/ScreenLayout';
-import { BudgetItemDialog } from '../../components/project/BudgetItemDialog';
-import { BudgetSection } from '../../components/project/BudgetSection';
 import { ProjectExpensesList } from '../../components/expense/ProjectExpensesList';
 import { LinkExecutorDialog } from '../../components/project/LinkExecutorDialog';
 import { ExecutorsList } from '../../components/project/ExecutorsList';
@@ -20,13 +18,6 @@ import {
 } from '../../components/project/ProjectFormFields';
 import { ProjectPhotoPicker } from '../../components/project/ProjectPhotoPicker';
 import { SavedPhotoGallery } from '../../components/project/SavedPhotoGallery';
-import {
-  createBudgetItem,
-  deleteBudgetItem,
-  getBudgetItemsByProjectId,
-  reorderBudgetItem,
-  updateBudgetItem,
-} from '../../repositories/budgetItemRepository';
 import { createExecutor } from '../../repositories/executorRepository';
 import { getExpensesByProjectId } from '../../repositories/expenseRepository';
 import { createPhoto, deletePhoto, getPhotosByProjectId } from '../../repositories/photoRepository';
@@ -40,15 +31,7 @@ import {
   linkExecutorToProject,
   unlinkExecutorFromProject,
 } from '../../repositories/projectExecutorRepository';
-import type {
-  BudgetItemSummary,
-  Executor,
-  Photo,
-  Project,
-  ProjectBudgetSummary,
-} from '../../types/entities';
-import { getProjectBudgetSummary } from '../../utils/budget';
-import { groupExpensesByBudgetItem, type ExpenseGroup } from '../../utils/expenses';
+import type { Executor, Expense, Photo, Project } from '../../types/entities';
 import { formatDate, formatDateOnly, formatMoney } from '../../utils/format';
 import { getCurrentCoordinates } from '../../utils/location';
 import { savePhotoFromUri } from '../../utils/photos';
@@ -64,27 +47,10 @@ export default function ProjectDetailScreen() {
   const [values, setValues] = useState<ProjectFormValues | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [pendingPhotos, setPendingPhotos] = useState<string[]>([]);
-  const [budgetSummary, setBudgetSummary] = useState<ProjectBudgetSummary | null>(
-    null,
-  );
-  const [expenseGroups, setExpenseGroups] = useState<ExpenseGroup[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [executors, setExecutors] = useState<Executor[]>([]);
   const [executorDialogVisible, setExecutorDialogVisible] = useState(false);
-  const [budgetDialogVisible, setBudgetDialogVisible] = useState(false);
-  const [budgetDialogMode, setBudgetDialogMode] = useState<'create' | 'edit'>('create');
-  const [editingBudgetItem, setEditingBudgetItem] = useState<BudgetItemSummary | null>(
-    null,
-  );
-  const [suggestedBudgetOrder, setSuggestedBudgetOrder] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const refreshBudgetSummary = useCallback(async () => {
-    if (!Number.isFinite(projectId)) {
-      return;
-    }
-
-    setBudgetSummary(await getProjectBudgetSummary(projectId));
-  }, [projectId]);
 
   const loadProject = useCallback(async () => {
     if (!Number.isFinite(projectId)) {
@@ -95,21 +61,18 @@ export default function ProjectDetailScreen() {
 
     setLoading(true);
     try {
-      const [loadedProject, loadedPhotos, summary, loadedExecutors, expenses, budgetItems] =
+      const [loadedProject, loadedPhotos, loadedExecutors, loadedExpenses] =
         await Promise.all([
           getProjectById(projectId),
           getPhotosByProjectId(projectId),
-          getProjectBudgetSummary(projectId),
           getExecutorsByProjectId(projectId),
           getExpensesByProjectId(projectId),
-          getBudgetItemsByProjectId(projectId),
         ]);
 
       setProject(loadedProject);
       setPhotos(loadedPhotos);
-      setBudgetSummary(summary);
       setExecutors(loadedExecutors);
-      setExpenseGroups(groupExpensesByBudgetItem(expenses, budgetItems));
+      setExpenses(loadedExpenses);
       setPendingPhotos([]);
 
       if (loadedProject) {
@@ -211,7 +174,6 @@ export default function ProjectDetailScreen() {
       const loadedPhotos = await getPhotosByProjectId(project.id);
       setPhotos(loadedPhotos);
       setPendingPhotos([]);
-      await refreshBudgetSummary();
     } catch (error) {
       console.error(error);
       setErrorMessage('Не удалось сохранить изменения');
@@ -291,79 +253,6 @@ export default function ProjectDetailScreen() {
     });
   };
 
-  const openCreateBudgetDialog = () => {
-    const nextOrder = budgetSummary?.items.length ?? 0;
-    setSuggestedBudgetOrder(nextOrder);
-    setBudgetDialogMode('create');
-    setEditingBudgetItem(null);
-    setBudgetDialogVisible(true);
-  };
-
-  const openEditBudgetDialog = (item: BudgetItemSummary) => {
-    setBudgetDialogMode('edit');
-    setEditingBudgetItem(item);
-    setBudgetDialogVisible(true);
-  };
-
-  const handleSaveBudgetItem = async (input: {
-    name: string;
-    plannedAmount: number;
-    order: number;
-  }) => {
-    if (!project) {
-      return;
-    }
-
-    try {
-      if (budgetDialogMode === 'create') {
-        await createBudgetItem({
-          projectId: project.id,
-          name: input.name,
-          plannedAmount: input.plannedAmount,
-          order: input.order,
-        });
-      } else if (editingBudgetItem) {
-        await updateBudgetItem(editingBudgetItem.id, {
-          name: input.name,
-          plannedAmount: input.plannedAmount,
-          order: input.order,
-        });
-      }
-
-      await refreshBudgetSummary();
-    } catch (error) {
-      console.error(error);
-      setErrorMessage('Не удалось сохранить пункт бюджета');
-    }
-  };
-
-  const handleDeleteBudgetItem = async (item: BudgetItemSummary) => {
-    try {
-      await deleteBudgetItem(item.id);
-      await refreshBudgetSummary();
-    } catch (error) {
-      console.error(error);
-      setErrorMessage('Не удалось удалить пункт бюджета');
-    }
-  };
-
-  const handleMoveBudgetItem = async (
-    item: BudgetItemSummary,
-    direction: 'up' | 'down',
-  ) => {
-    if (!project) {
-      return;
-    }
-
-    try {
-      await reorderBudgetItem(project.id, item.id, direction);
-      await refreshBudgetSummary();
-    } catch (error) {
-      console.error(error);
-      setErrorMessage('Не удалось изменить порядок пунктов');
-    }
-  };
-
   if (loading) {
     return (
       <ScreenLayout title="Проект">
@@ -404,19 +293,8 @@ export default function ProjectDetailScreen() {
         title="Добавить фотографии"
       />
 
-      {budgetSummary ? (
-        <BudgetSection
-          summary={budgetSummary}
-          onAdd={openCreateBudgetDialog}
-          onEdit={openEditBudgetDialog}
-          onDelete={handleDeleteBudgetItem}
-          onMoveUp={(item) => handleMoveBudgetItem(item, 'up')}
-          onMoveDown={(item) => handleMoveBudgetItem(item, 'down')}
-        />
-      ) : null}
-
       <ProjectExpensesList
-        groups={expenseGroups}
+        expenses={expenses}
         onAdd={() => router.push(`/expense/create?projectId=${project.id}`)}
       />
 
@@ -440,15 +318,6 @@ export default function ProjectDetailScreen() {
           Удалить проект
         </Button>
       </View>
-
-      <BudgetItemDialog
-        visible={budgetDialogVisible}
-        mode={budgetDialogMode}
-        item={editingBudgetItem}
-        suggestedOrder={suggestedBudgetOrder}
-        onDismiss={() => setBudgetDialogVisible(false)}
-        onSubmit={handleSaveBudgetItem}
-      />
 
       <LinkExecutorDialog
         visible={executorDialogVisible}

@@ -11,7 +11,6 @@ export async function clearAllData(): Promise<void> {
     DELETE FROM photos;
     DELETE FROM expenses;
     DELETE FROM project_executors;
-    DELETE FROM budget_items;
     DELETE FROM executors;
     DELETE FROM projects;
   `);

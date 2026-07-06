@@ -4,6 +4,7 @@ import {
   CREATE_SCHEMA_MIGRATIONS_TABLE,
   MIGRATION_V1,
   MIGRATION_V2,
+  MIGRATION_V3,
   SCHEMA_VERSION,
 } from './schema';
 
@@ -20,6 +21,10 @@ const MIGRATIONS: Migration[] = [
   {
     version: 2,
     sql: MIGRATION_V2,
+  },
+  {
+    version: 3,
+    sql: MIGRATION_V3,
   },
 ];
 

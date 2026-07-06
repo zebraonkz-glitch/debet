@@ -1,9 +1,6 @@
-import { getBudgetItemsByProjectId } from '../repositories/budgetItemRepository';
 import { getExpensesByProjectId } from '../repositories/expenseRepository';
 import { getAllProjects, getProjectById } from '../repositories/projectRepository';
-import type { Expense, Project, ProjectBudgetSummary } from '../types/entities';
-import { getProjectBudgetSummary } from './budget';
-import { groupExpensesByBudgetItem, type ExpenseGroup } from './expenses';
+import type { Expense, Project } from '../types/entities';
 import {
   compareProjectsByDate,
   isProjectDateInPeriod,
@@ -12,18 +9,13 @@ import {
 
 export type ReportProjectSection = {
   project: Project;
-  budgetSummary: ProjectBudgetSummary;
   expenses: Expense[];
-  expenseGroups: ExpenseGroup[];
   projectAmount: number;
   expensesTotal: number;
   profit: number;
 };
 
 export type ReportTotals = {
-  planned: number;
-  actual: number;
-  remaining: number;
   projectAmount: number;
   expensesTotal: number;
   profit: number;
@@ -34,7 +26,6 @@ export type ReportResult = {
   toDate: string | null;
   sections: ReportProjectSection[];
   totals: ReportTotals;
-  overBudgetProjectNames: string[];
 };
 
 export type BuildReportOptions = {
@@ -103,19 +94,16 @@ export async function buildReport(
       continue;
     }
 
-    const budgetSummary = await getProjectBudgetSummary(projectId);
     const expenses = await getExpensesByProjectId(projectId);
-    const budgetItems = await getBudgetItemsByProjectId(projectId);
-    const expenseGroups = groupExpensesByBudgetItem(expenses, budgetItems);
-    const expensesTotal = roundAmount(budgetSummary.actualTotal);
+    const expensesTotal = roundAmount(
+      expenses.reduce((sum, expense) => sum + expense.amount, 0),
+    );
     const projectAmount = roundAmount(project.amount);
     const profit = roundAmount(projectAmount - expensesTotal);
 
     sections.push({
       project,
-      budgetSummary,
       expenses,
-      expenseGroups,
       projectAmount,
       expensesTotal,
       profit,
@@ -126,40 +114,22 @@ export async function buildReport(
 
   const totals = sections.reduce<ReportTotals>(
     (accumulator, section) => ({
-      planned: accumulator.planned + section.budgetSummary.plannedTotal,
-      actual: accumulator.actual + section.budgetSummary.actualTotal,
-      remaining: accumulator.remaining + section.budgetSummary.remainingTotal,
       projectAmount: accumulator.projectAmount + section.projectAmount,
       expensesTotal: accumulator.expensesTotal + section.expensesTotal,
       profit: accumulator.profit + section.profit,
     }),
-    {
-      planned: 0,
-      actual: 0,
-      remaining: 0,
-      projectAmount: 0,
-      expensesTotal: 0,
-      profit: 0,
-    },
+    { projectAmount: 0, expensesTotal: 0, profit: 0 },
   );
 
-  totals.planned = roundAmount(totals.planned);
-  totals.actual = roundAmount(totals.actual);
-  totals.remaining = roundAmount(totals.remaining);
   totals.projectAmount = roundAmount(totals.projectAmount);
   totals.expensesTotal = roundAmount(totals.expensesTotal);
   totals.profit = roundAmount(totals.profit);
-
-  const overBudgetProjectNames = sections
-    .filter((section) => section.budgetSummary.isOverBudget)
-    .map((section) => section.project.name);
 
   return {
     fromDate: fromIso ?? null,
     toDate: toIso ?? null,
     sections,
     totals,
-    overBudgetProjectNames,
   };
 }
 

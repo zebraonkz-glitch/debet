@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const CREATE_SCHEMA_MIGRATIONS_TABLE = `
   CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -73,4 +73,28 @@ export const MIGRATION_V2 = `
   ALTER TABLE projects ADD COLUMN project_date TEXT;
   ALTER TABLE projects ADD COLUMN amount REAL NOT NULL DEFAULT 0;
   UPDATE projects SET project_date = created_at WHERE project_date IS NULL;
+`;
+
+export const MIGRATION_V3 = `
+  PRAGMA foreign_keys = OFF;
+
+  CREATE TABLE expenses_new (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    amount REAL NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+  );
+
+  INSERT INTO expenses_new (id, project_id, amount, description, created_at)
+  SELECT id, project_id, amount, description, created_at FROM expenses;
+
+  DROP TABLE expenses;
+  ALTER TABLE expenses_new RENAME TO expenses;
+  DROP TABLE IF EXISTS budget_items;
+
+  CREATE INDEX IF NOT EXISTS idx_expenses_project ON expenses(project_id);
+
+  PRAGMA foreign_keys = ON;
 `;

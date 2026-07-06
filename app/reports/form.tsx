@@ -116,27 +116,6 @@ export default function ReportFormScreen() {
               >
                 Прибыль: {formatMoney(report.totals.profit)}
               </Text>
-              <Text variant="bodySmall" style={styles.divider}>
-                Бюджет
-              </Text>
-              <Text variant="bodyMedium">
-                План: {formatMoney(report.totals.planned)}
-              </Text>
-              <Text variant="bodyMedium">
-                Факт: {formatMoney(report.totals.actual)}
-              </Text>
-              <Text variant="bodyMedium">
-                Остаток: {formatMoney(report.totals.remaining)}
-              </Text>
-              {report.overBudgetProjectNames.length > 0 ? (
-                <Text variant="bodyMedium" style={styles.warning}>
-                  Превышение бюджета: {report.overBudgetProjectNames.join(', ')}
-                </Text>
-              ) : (
-                <Text variant="bodySmall" style={styles.ok}>
-                  Превышений бюджета нет
-                </Text>
-              )}
             </Card.Content>
           </Card>
 
@@ -171,19 +150,9 @@ const styles = StyleSheet.create({
   profitTotal: {
     color: '#1a5fb4',
     marginTop: 4,
-    marginBottom: 8,
-  },
-  divider: {
-    color: '#9aa0a6',
-    marginTop: 8,
-    marginBottom: 4,
   },
   warning: {
     color: '#c62828',
-    marginTop: 8,
-  },
-  ok: {
-    color: '#2e7d32',
     marginTop: 8,
   },
 });

@@ -13,14 +13,13 @@ import {
   ExpenseFormFields,
   type ExpenseFormValues,
 } from '../../components/expense/ExpenseFormFields';
-import { getBudgetItemById, getBudgetItemsByProjectId } from '../../repositories/budgetItemRepository';
 import {
   deleteExpense,
   getExpenseById,
   updateExpense,
 } from '../../repositories/expenseRepository';
-import { getProjectById } from '../../repositories/projectRepository';
-import type { BudgetItem, Expense, Project } from '../../types/entities';
+import { getAllProjects } from '../../repositories/projectRepository';
+import type { Expense, Project } from '../../types/entities';
 import { formatDate, formatMoney } from '../../utils/format';
 
 export default function ExpenseDetailScreen() {
@@ -30,9 +29,7 @@ export default function ExpenseDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [expense, setExpense] = useState<Expense | null>(null);
-  const [project, setProject] = useState<Project | null>(null);
-  const [budgetItem, setBudgetItem] = useState<BudgetItem | null>(null);
-  const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [values, setValues] = useState<ExpenseFormValues | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -45,30 +42,22 @@ export default function ExpenseDetailScreen() {
 
     setLoading(true);
     try {
-      const loadedExpense = await getExpenseById(expenseId);
+      const [loadedExpense, loadedProjects] = await Promise.all([
+        getExpenseById(expenseId),
+        getAllProjects(),
+      ]);
+
+      setProjects(loadedProjects);
 
       if (!loadedExpense) {
         setExpense(null);
-        setProject(null);
-        setBudgetItem(null);
         setValues(null);
         return;
       }
 
-      const [loadedProject, loadedBudgetItem, loadedBudgetItems] =
-        await Promise.all([
-          getProjectById(loadedExpense.projectId),
-          getBudgetItemById(loadedExpense.budgetItemId),
-          getBudgetItemsByProjectId(loadedExpense.projectId),
-        ]);
-
       setExpense(loadedExpense);
-      setProject(loadedProject);
-      setBudgetItem(loadedBudgetItem);
-      setBudgetItems(loadedBudgetItems);
       setValues({
         projectId: loadedExpense.projectId,
-        budgetItemId: loadedExpense.budgetItemId,
         amount: String(loadedExpense.amount),
         description: loadedExpense.description,
         date: new Date(loadedExpense.createdAt),
@@ -89,12 +78,12 @@ export default function ExpenseDetailScreen() {
       return;
     }
 
-    const amount = Number(values.amount.replace(',', '.'));
-
-    if (!values.budgetItemId) {
-      setErrorMessage('Выберите пункт бюджета');
+    if (!values.projectId) {
+      setErrorMessage('Выберите проект');
       return;
     }
+
+    const amount = Number(values.amount.replace(',', '.'));
 
     if (!Number.isFinite(amount) || amount <= 0) {
       setErrorMessage('Укажите корректную сумму');
@@ -104,7 +93,7 @@ export default function ExpenseDetailScreen() {
     setSaving(true);
     try {
       const updated = await updateExpense(expense.id, {
-        budgetItemId: values.budgetItemId,
+        projectId: values.projectId,
         amount,
         description: values.description.trim(),
         createdAt: values.date.toISOString(),
@@ -112,10 +101,8 @@ export default function ExpenseDetailScreen() {
 
       if (updated) {
         setExpense(updated);
-        setBudgetItem(await getBudgetItemById(updated.budgetItemId));
         setValues({
           projectId: updated.projectId,
-          budgetItemId: updated.budgetItemId,
           amount: String(updated.amount),
           description: updated.description,
           date: new Date(updated.createdAt),
@@ -155,7 +142,7 @@ export default function ExpenseDetailScreen() {
     );
   }
 
-  if (!expense || !values || !project) {
+  if (!expense || !values) {
     return (
       <ScreenLayout title="Расход">
         <Text variant="bodyLarge">Расход не найден</Text>
@@ -169,27 +156,10 @@ export default function ExpenseDetailScreen() {
         Создан: {formatDate(expense.createdAt)} · Сумма: {formatMoney(expense.amount)}
       </Text>
 
-      <View style={styles.links}>
-        <Button
-          mode="outlined"
-          icon="folder"
-          onPress={() => router.push(`/project/${project.id}`)}
-        >
-          Проект: {project.name}
-        </Button>
-        {budgetItem ? (
-          <Text variant="bodyMedium" style={styles.budgetItem}>
-            Пункт бюджета: {budgetItem.name}
-          </Text>
-        ) : null}
-      </View>
-
       <ExpenseFormFields
-        projects={[project]}
-        budgetItems={budgetItems}
+        projects={projects}
         values={values}
         onChange={setValues}
-        showProjectPicker={false}
       />
 
       <View style={styles.actions}>
@@ -219,13 +189,6 @@ const styles = StyleSheet.create({
   meta: {
     color: '#9aa0a6',
     marginBottom: 12,
-  },
-  links: {
-    gap: 8,
-    marginBottom: 16,
-  },
-  budgetItem: {
-    color: '#1a5fb4',
   },
   actions: {
     gap: 12,
