@@ -67,7 +67,7 @@ export function mapProject(row: ProjectRow): Project {
     id: row.id,
     name: row.name,
     description: row.description,
-    visitLater: row.visitlater === 1,
+    finished: row.visitlater === 0,
     liked: row.liked === 1,
     dd: mapCoordinates(row.latitude, row.longitude),
     createdAt: row.created_at,

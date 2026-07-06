@@ -14,7 +14,7 @@ export async function createProject(input: CreateProjectInput): Promise<Project>
     ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     input.name,
     input.description ?? '',
-    input.visitLater ? 1 : 0,
+    input.finished === false ? 1 : 0,
     input.liked ? 1 : 0,
     input.dd?.latitude ?? null,
     input.dd?.longitude ?? null,
@@ -49,16 +49,16 @@ export async function getAllProjects(): Promise<Project[]> {
 }
 
 export async function getProjectsByFlags(options: {
-  visitLater?: boolean;
+  finished?: boolean;
   liked?: boolean;
 }): Promise<Project[]> {
   const db = await getDatabase();
   const conditions: string[] = [];
   const params: number[] = [];
 
-  if (options.visitLater !== undefined) {
+  if (options.finished !== undefined) {
     conditions.push('visitlater = ?');
-    params.push(options.visitLater ? 1 : 0);
+    params.push(options.finished ? 0 : 1);
   }
 
   if (options.liked !== undefined) {
@@ -95,7 +95,7 @@ export async function updateProject(
      WHERE id = ?`,
     input.name ?? current.name,
     input.description ?? current.description,
-    (input.visitLater ?? current.visitLater) ? 1 : 0,
+    (input.finished ?? current.finished) ? 0 : 1,
     (input.liked ?? current.liked) ? 1 : 0,
     dd?.latitude ?? null,
     dd?.longitude ?? null,

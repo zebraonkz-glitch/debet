@@ -3,7 +3,7 @@ import type { Coordinates } from './entities';
 export type CreateProjectInput = {
   name: string;
   description?: string;
-  visitLater?: boolean;
+  finished?: boolean;
   liked?: boolean;
   dd?: Coordinates | null;
   createdAt?: string;

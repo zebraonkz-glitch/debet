@@ -7,7 +7,7 @@ export type Project = {
   id: number;
   name: string;
   description: string;
-  visitLater: boolean;
+  finished: boolean;
   liked: boolean;
   dd: Coordinates | null;
   createdAt: string;
